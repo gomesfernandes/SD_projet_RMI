@@ -1,1 +1,2 @@
+pkill rmiregistry
 javac -d bin src/*.java
