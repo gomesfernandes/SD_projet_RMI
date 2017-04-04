@@ -22,15 +22,28 @@ public class PlayerImpl
 	private boolean myTurn;
 	private String host;
 	private String port;
+	private int nextProd = 0;
 	
 	public PlayerImpl(String h, String p) throws RemoteException {
 		host = h;
 		port = p;
 	}
 	
+	public boolean isMyTurn() { return myTurn; }
+	
+	public boolean isObjectiveReached() {
+		if (ressources == null) return false;
+		for (int i=0; i<ressources.size(); i++) {
+			if (ressources.get(i).getNbCopies() < objective)
+				return false;
+		}
+		return true;
+	}
+	
 	public void setObjective(int o) throws RemoteException {
 		objective = o;
 	}
+	
 	public void setPlayers(ArrayList<Agent> j)throws RemoteException {
 		competitors = new ArrayList<Player>();
 		Iterator<Agent> playerIter = j.iterator();
@@ -49,6 +62,7 @@ public class PlayerImpl
 			} catch (MalformedURLException e) { System.err.println(e);}
 		}
 	}
+	
 	public void setProducers(Map<Agent,Integer> p) throws RemoteException {
 		producers = new ArrayList<Producer>();
 		ressources = new ArrayList<Ressource>();
@@ -87,6 +101,16 @@ public class PlayerImpl
 	//public int getRessource(int type, int n) throws RemoteException {
 	//	producers[type].takeCopies(n);
 	//}
+	
+	public void makeMove() throws RemoteException {
+		int copies = 0;
+		Producer p = producers.get(nextProd);
+		copies = p.takeCopies(objective);
+		int i = ressources.indexOf(new Ressource(p.getRessourceType()));
+		ressources.get(i).addCopies(copies);
+		nextProd = (nextProd+1)%producers.size();
+		System.out.println("Took "+copies+"of ressource "+p.getRessourceType());
+	}
 
 	public static void main(String args[]) {
 		if (args.length != 3) {
@@ -110,8 +134,13 @@ public class PlayerImpl
 				"rmi://" + args[1] + ":" + args[2] + "/GameCoordinator");
 			gameCoord.addPlayer(hostIP,args[0]);
 			
-			
 			System.out.println("Player running");
+			do {
+				if (j.isMyTurn()) {
+					j.makeMove();
+				}
+			} while (!j.isObjectiveReached());
+			
 			
 		} 
 		catch (RemoteException re) { System.err.println(re) ; }

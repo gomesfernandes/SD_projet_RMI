@@ -4,7 +4,7 @@ import java.util.ArrayList;
 public class Ressource {
 	private Integer type;
 	private List<Producer> producers = new ArrayList<Producer>();
-	
+	private int nbCopies = 0;
 	public Ressource(int t) {
 		type = t;
 	}
@@ -15,6 +15,8 @@ public class Ressource {
 		if (!producers.contains(p))
 			producers.add(p);
 	}
+	public void addCopies(int n) { nbCopies+=n; }
+	public int getNbCopies() { return nbCopies; }
 	
 	public boolean equals(Object object) {
         boolean same = false;

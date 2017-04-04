@@ -22,13 +22,19 @@ public class ProducerImpl
 	public ProducerImpl(int rtype) throws RemoteException {
 			ressourceType = rtype;
 	}
-	
+
 	/**
 	 * @brief Produces 5 new nbCopies of the ressource.  
 	 */ 
 	public synchronized void produce() throws RemoteException {
-		nbCopies+=5;
-		System.out.println("new copies of ressource");
+		if (productionOngoing) {
+			nbCopies+=5;
+			System.out.println("5 new copies of ressource");
+		}
+	}
+	
+	public int getRessourceType() throws RemoteException {
+		return ressourceType;
 	}
 	
 	/**
@@ -52,11 +58,15 @@ public class ProducerImpl
 	}
 	
 	/**
-	 * @brief Launches the production.
+	 * @brief Launches or stops the production.
 	 */ 
 	public void startProduction() throws RemoteException {
 		productionOngoing = true;
 		System.out.println("Production of ressource started");
+	}
+	public void stopProduction() throws RemoteException {
+		productionOngoing = false;
+		System.out.println("Production of ressource stopped");
 	}
 
 	public static void main(String args[]) {
@@ -82,8 +92,11 @@ public class ProducerImpl
 				"rmi://" + args[2] + ":" + args[3] + "/GameCoordinator");
 			gameCoord.addProducer(hostIP,args[1],port);
 			
-			System.out.println("Producer running, waiting for game");
-
+			System.out.println("Producer running");
+			while (true) {
+				p.produce();
+				Thread.sleep(1000);
+			}
 		} 
 		catch (NumberFormatException e) { 
 			System.out.println("Not a ressource"); 
@@ -98,6 +111,6 @@ public class ProducerImpl
 		catch (MalformedURLException e) { System.out.println(e) ; }
 		catch (NotBoundException re) { System.out.println(re) ; }
 		catch (UnknownHostException re) { System.out.println(re) ; } 
-
+		catch (Exception e) {System.out.println(e) ;}
 	}
 }

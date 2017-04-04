@@ -12,17 +12,19 @@ public class RoundCoordinatorImpl
 		extends UnicastRemoteObject 
 		implements RoundCoordinator 
 {
-	private boolean roundOngoing = false;
+	private boolean roundOngoing = true;
 	private int delay;
 	private int endType;
 	private int personalityType;
 	
 	public RoundCoordinatorImpl() throws RemoteException {}
 
+	public boolean isRoundOngoing() { return roundOngoing; }
+
 	/**
 	 * @brief Marks the round as finished.
 	 */
-	public void endRound() throws RemoteException {
+	public void playerFinished() throws RemoteException {
 		roundOngoing = false;
 		//notify GameCoordinator ? 
 	}
@@ -74,12 +76,31 @@ public class RoundCoordinatorImpl
 			Iterator<Agent> playerIter = playerLocations.iterator();
 			while (playerIter.hasNext()) {
 				Agent a = playerIter.next();
-				Player p = (Player) Naming.lookup("rmi://"+ a.getHost()+ 
-										":" + a.getPort() + "/Player");
+				Player p = (Player) Naming.lookup("rmi://"+ 
+						a.getHost()+ ":" + a.getPort() + "/Player");
 				players.add(p);
 				p.setObjective(objective);
 				p.setPlayers(playerLocations);
 				p.setProducers(producerLocations);
+			}
+			
+			/* Tell producers to start producing */
+			ArrayList<Producer> producers = new ArrayList<Producer>();
+			Iterator<Agent> prodIter = producerLocations.keySet().iterator();
+			while (prodIter.hasNext()) {
+				Agent a = prodIter.next();
+				Producer p = (Producer) Naming.lookup("rmi://"+ a.getHost()+ 
+										":" + a.getPort() + "/Producer");
+				producers.add(p);
+				p.startProduction();
+			}
+			
+			int nextPlayer = 0, nbPlayers = players.size();
+			
+			while (roundCoord.isRoundOngoing()) {
+				Player p = players.get(nextPlayer);
+				p.setMyTurn(true);
+				nextPlayer = (nextPlayer+1)%nbPlayers;
 			}
 			
 		} 
