@@ -8,22 +8,73 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Iterator;
 //import Player ;
 
 public class PlayerImpl 
 		extends UnicastRemoteObject 
 		implements Player 
 {
-	private Map<Integer,Integer> objective;
-	private ArrayList<Producer> competitors;
-	private ArrayList<Player> producers;
+	private int objective;
+	private ArrayList<Player> competitors;
+	private ArrayList<Producer> producers;
+	private ArrayList<Ressource> ressources;
 	private boolean myTurn;
+	private String host;
+	private String port;
 	
-	public PlayerImpl() throws RemoteException {}
+	public PlayerImpl(String h, String p) throws RemoteException {
+		host = h;
+		port = p;
+	}
 	
-	public void setObjective(Map<String,Integer> objective) throws RemoteException {}
-	public void setPlayers(Map<String,Integer> j) throws RemoteException {}
-	public void setProducers(Map<String,Integer> p) throws RemoteException {}
+	public void setObjective(int o) throws RemoteException {
+		objective = o;
+	}
+	public void setPlayers(ArrayList<Agent> j)throws RemoteException {
+		competitors = new ArrayList<Player>();
+		Iterator<Agent> playerIter = j.iterator();
+		while (playerIter.hasNext()) {
+			Agent a = playerIter.next();
+			try { 
+				Player p = (Player) Naming.lookup("rmi://"+ a.getHost()+ 
+									":" + a.getPort() + "/Player");
+				if ( !(a.getHost() == host && a.getPort() == port)) {
+					competitors.add(p);
+				}
+			} catch (NotBoundException re) { 
+				System.err.println("Cannot find player on host "+
+								a.getHost()+" and port "+a.getPort()) ; 
+				System.exit(1);
+			} catch (MalformedURLException e) { System.err.println(e);}
+		}
+	}
+	public void setProducers(Map<Agent,Integer> p) throws RemoteException {
+		producers = new ArrayList<Producer>();
+		ressources = new ArrayList<Ressource>();
+		
+		Iterator<Agent> producerIter = p.keySet().iterator();
+		while (producerIter.hasNext()) {
+			Agent a = producerIter.next();
+			try {
+				Producer prod = (Producer) Naming.lookup("rmi://"+ 
+							a.getHost()+ ":" + a.getPort() + "/Player");
+				producers.add(prod);
+				
+				Ressource r = new Ressource(p.get(a));
+				if (!ressources.contains(r)) {
+					ressources.add(r);
+				} else {
+					r = ressources.get(ressources.indexOf(r));
+				}
+				r.addProducer(prod);
+			} catch (NotBoundException re) { 
+				System.err.println("Cannot find producer on host "+
+								a.getHost()+" and port "+a.getPort()) ; 
+				System.exit(1);
+			} catch (MalformedURLException e) { System.err.println(e);}
+		}
+	}
 	
 	/**
 	 * @brief Indicate that it's the players' turn.
@@ -51,7 +102,7 @@ public class PlayerImpl
 			String hostIP = InetAddress.getLocalHost().getHostAddress();
 			
 			/* create local producer object and bind it */
-			PlayerImpl j = new PlayerImpl();
+			PlayerImpl j = new PlayerImpl(hostIP,args[0]);
 			Naming.bind(bindname,j);
 			
 			/* access game coordinator and notify him about us */
@@ -63,11 +114,11 @@ public class PlayerImpl
 			System.out.println("Player running");
 			
 		} 
-		catch (RemoteException re) { System.out.println(re) ; }
-		catch (AlreadyBoundException e) { System.out.println(e) ; }
-		catch (MalformedURLException e) { System.out.println(e) ; }
-		catch (NotBoundException re) { System.out.println(re) ; }
-		catch (UnknownHostException re) { System.out.println(re) ; }
+		catch (RemoteException re) { System.err.println(re) ; }
+		catch (AlreadyBoundException e) { System.err.println(e) ; }
+		catch (MalformedURLException e) { System.err.println(e) ; }
+		catch (NotBoundException re) { System.err.println(re) ; }
+		catch (UnknownHostException re) { System.err.println(re) ; }
 		
 	}
 }

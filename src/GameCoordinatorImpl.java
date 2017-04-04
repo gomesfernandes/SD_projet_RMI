@@ -56,6 +56,19 @@ public class GameCoordinatorImpl
 		gameOngoing = true;
 	}
 	
+	public int getNumberPlayers() throws RemoteException {
+		return competitors.size();
+	}
+	public int getNumberProducers() throws RemoteException {
+		return producers.size();
+	}
+	public ArrayList<Agent> getPlayers() throws RemoteException {
+		return competitors;
+	}
+	public Map<Agent,Integer> getProducers() throws RemoteException {
+		return producers;
+	}
+	
 	public static void main(String args[]) {
 		if (args.length != 1) {
 			System.out.println("Usage : java GameCoordinatorImpl <port>") ;
