@@ -1,0 +1,2 @@
+cd bin
+rmiregistry 3002 & java ProducerImpl 1 3002 localhost 3000

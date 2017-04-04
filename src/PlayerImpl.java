@@ -58,7 +58,7 @@ public class PlayerImpl
 			Agent a = producerIter.next();
 			try {
 				Producer prod = (Producer) Naming.lookup("rmi://"+ 
-							a.getHost()+ ":" + a.getPort() + "/Player");
+							a.getHost()+ ":" + a.getPort() + "/Producer");
 				producers.add(prod);
 				
 				Ressource r = new Ressource(p.get(a));

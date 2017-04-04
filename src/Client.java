@@ -8,13 +8,13 @@ public class Client
 		if (args.length != 2)
 		{
 			System.out.println(
-			"Usage : java Client <machine du Serveur>:<port du rmiregistry>") ;
+			"Usage : java Client <machine du Serveur> <port du rmiregistry>") ;
 			System.exit(0) ;
 		}
 		try
 		{
-			Producer stub = (Producer) Naming.lookup(
-			"rmi://" + args[0] + ":" + args[1] + "/Producer") ;
+			GameCoordinator stub = (GameCoordinator) Naming.lookup(
+			"rmi://" + args[0] + ":" + args[1] + "/GameCoordinator") ;
 			// stub est désormais utilisable comme un objet local.
 		}
 		catch (NotBoundException re) { System.out.println(re) ; }

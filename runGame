@@ -1,0 +1,2 @@
+cd bin
+rmiregistry 3000 & java GameCoordinatorImpl 3000

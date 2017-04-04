@@ -1,0 +1,2 @@
+cd bin
+rmiregistry 3001 & java RoundCoordinatorImpl 3001 localhost 3000

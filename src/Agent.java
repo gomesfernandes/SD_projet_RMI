@@ -1,6 +1,7 @@
 // doit être accessible à tout le monde...
+import java.io.Serializable;
 
-public class Agent {
+public class Agent implements Serializable {
 	public static final char PRODUCER = 'p';
 	public static final char PLAYER = 'j';
 	private String host;

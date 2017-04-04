@@ -35,7 +35,7 @@ public class RoundCoordinatorImpl
 		}
 		
 		String bindname="rmi://localhost:"+args[0]+"/RoundCoordinator";
-		
+
 		try {
 			/* access game coordinator */
 			GameCoordinator gameCoord = (GameCoordinator) Naming.lookup(
@@ -46,6 +46,20 @@ public class RoundCoordinatorImpl
 			Naming.bind(bindname,roundCoord) ;
 			System.out.println("round Coordinator running");
 			
+			/* Get information from GameCoordinator */
+			ArrayList<Agent> playerLocations = gameCoord.getPlayers();
+			Map<Agent,Integer> producerLocations = gameCoord.getProducers();
+			if (playerLocations.size() == 0 ) {
+				System.err.println("No players found. Ending...");
+				Naming.unbind(bindname);
+				System.exit(1);
+			} 
+			if (producerLocations.size() == 0 ) {
+				System.err.println("No producers found. Ending...");
+				Naming.unbind(bindname);
+				System.exit(1);
+			} 
+			
 			/* ask for paramterers */
 			Scanner reader = new Scanner(System.in);
 			System.out.println("Set the number of ressources to find (>=50): ");
@@ -54,18 +68,6 @@ public class RoundCoordinatorImpl
 				System.out.println("Not a possible number. Try again: ");
 				objective = reader.nextInt();
 			}
-			
-			/* Get information from GameCoordinator */
-			ArrayList<Agent> playerLocations = gameCoord.getPlayers();
-			Map<Agent,Integer> producerLocations = gameCoord.getProducers();
-			if (playerLocations.size() == 0 ) {
-				System.err.println("No players found. Ending...");
-				System.exit(1);
-			} 
-			if (producerLocations.size() == 0 ) {
-				System.err.println("No producers found. Ending...");
-				System.exit(1);
-			} 
 			
 			/* Tell players where to find competitors and ressources */
 			ArrayList<Player> players = new ArrayList<Player>();
@@ -79,7 +81,6 @@ public class RoundCoordinatorImpl
 				p.setPlayers(playerLocations);
 				p.setProducers(producerLocations);
 			}
-			
 			
 		} 
 		catch (RemoteException re) { System.err.println(re) ; }

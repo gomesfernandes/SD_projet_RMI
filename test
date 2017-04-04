@@ -1,0 +1,12 @@
+cd bin
+pkill rmiregistry
+rmiregistry 3000 &
+java GameCoordinatorImpl 3000 &
+rmiregistry 3001 &
+java ProducerImpl 1 3001 localhost 3000 &
+rmiregistry 3002 &
+java PlayerImpl 3002 localhost 3000 &
+rmiregistry 3003 &
+java PlayerImpl 3003 localhost 3000 &
+rmiregistry 3004 &
+java RoundCoordinatorImpl 3004 localhost 3000 &
