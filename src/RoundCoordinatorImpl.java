@@ -24,12 +24,13 @@ public class RoundCoordinatorImpl
 		implements RoundCoordinator 
 {
 	
-	private boolean roundOngoing = true;
+	private boolean roundOngoing = false;
 	private boolean hasTurns = true;
-	private int delay = 500; //ms
+	public boolean waitingForMove = false;
 	private int endType;
 	ArrayList<Player> players = new ArrayList<Player>();
 	ArrayList<Producer> producers = new ArrayList<Producer>();
+	ArrayList<Integer> finishedPlayers = new ArrayList<Integer>();
 	private int nbFinishedPlayers = 0;
 	private int currentPlayer = -1;
 	private int winner = -1;
@@ -42,9 +43,18 @@ public class RoundCoordinatorImpl
 		if (b) System.out.println("Players will take turns");
 		else System.out.println("Players do not take turns");
 	}
+	
+	/** {@inheritDoc} */
+	public synchronized boolean isTurnsSet() { return hasTurns; }
 
-	/** @return true if the round is finished, false if not */
-	public boolean isRoundOngoing() { return roundOngoing; }
+	/** Mark the start of the actual game play */
+	public synchronized void setRoundOngoing() {
+		roundOngoing = true;
+		notify();
+	}
+
+	/** {@inheritDoc} */
+	public synchronized boolean isRoundOngoing() {return roundOngoing;}
 
 	/** Chooses who's turn it is. The first player is chosen randomly, 
 	 * then it cycles through the list of players.
@@ -78,6 +88,7 @@ public class RoundCoordinatorImpl
 	/** {@inheritDoc} */
 	public void playerFinished() throws RemoteException {
 		nbFinishedPlayers++;
+		finishedPlayers.add(currentPlayer);
 		if (nbFinishedPlayers == 1) {
 			winner = currentPlayer;
 		}
@@ -85,6 +96,25 @@ public class RoundCoordinatorImpl
 			roundOngoing = false;
 		}
 	}
+	
+	/** {@inheritDoc} */
+	public synchronized void turnFinished() throws RemoteException {
+		waitingForMove = false;
+		notify();
+	}
+	
+	public synchronized void waitForMove() {
+		if (finishedPlayers.contains(currentPlayer)) {
+			waitingForMove = false;
+		} else {
+			while(waitingForMove) {
+				try {
+					wait();
+				} catch (InterruptedException e) {}
+			}
+		}
+	}
+	
 	
 	/** @return index of the first player to finish the round */
 	public int getWinner() { return winner; }
@@ -98,7 +128,6 @@ public class RoundCoordinatorImpl
 			producers.get(i).stopProduction();
 		}
 	}
-	
 	
 	/**
 	 * Starts a new round of the game. Through the GameCoordinator,
@@ -129,8 +158,7 @@ public class RoundCoordinatorImpl
 			/* Get information from GameCoordinator */
 			ArrayList<Agent> playerLocations = gameCoord.getPlayers();
 			Map<Agent,Integer> producerLocations = gameCoord.getProducers();
-			//if (playerLocations.size() < 2 ) {
-			if (playerLocations.size() == 0 ) {
+			if (playerLocations.size() < 2 ) {
 				System.err.println("Not enough players. Ending...");
 				Naming.unbind(bindname);
 				System.exit(1);
@@ -195,14 +223,21 @@ public class RoundCoordinatorImpl
 				p.startProduction();
 			}
 			
-			int next = roundCoord.nextPlayer();
-			System.out.println("Stating with player "+next);
-			while (roundCoord.isRoundOngoing()) {
-				Player p = roundCoord.getPlayers().get(next);
-				p.setMyTurn(true);
-				next = roundCoord.nextPlayer();
-				Thread.sleep(1000);
-			}
+			/* mark the start of the game */
+			roundCoord.setRoundOngoing();
+			
+			/* if players take turns, coordonate them */
+			if (roundCoord.isTurnsSet()) {
+				int next = roundCoord.nextPlayer();
+				System.out.println("Starting with player "+next);
+				while (roundCoord.isRoundOngoing()) {
+					Player p = roundCoord.getPlayers().get(next);
+					roundCoord.waitingForMove = true;
+					p.setMyTurn(true);
+					roundCoord.waitForMove();
+					next = roundCoord.nextPlayer();
+				}
+			} 
 			
 			System.out.println("Round over");
 			System.out.println("The winner is player "+roundCoord.getWinner());

@@ -16,4 +16,19 @@ public interface RoundCoordinator extends Remote {
 	 * @exception RemoteException exception occurred during remote call
 	 */ 
 	public void playerFinished() throws RemoteException;
+	
+	/** @return true if the round is finished, false if not 
+	 * @exception RemoteException exception occurred during remote call
+	 * */
+	public boolean isRoundOngoing() throws RemoteException;
+	
+	/** @return true if players take turns, false otherwise 
+	 * @exception RemoteException exception occurred during remote call
+	 */
+	public boolean isTurnsSet() throws RemoteException;
+	
+	/** Tells the coordinator that the player has made his move.
+	 * @exception RemoteException exception occurred during remote call
+	 */
+	public void turnFinished() throws RemoteException;
 }

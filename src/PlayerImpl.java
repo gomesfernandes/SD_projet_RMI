@@ -33,11 +33,12 @@ public class PlayerImpl
 	private ArrayList<Player> competitors;
 	private ArrayList<Producer> producers;
 	private ArrayList<Resource> resources;
+	private boolean roundStarted = false;
 	private boolean myTurn = false;
 	private String host;
 	private String port;
 	private int nextRess = 0;
-	private RoundCoordinator roundCoord;
+	private RoundCoordinator roundCoord = null;
 	
 	/**
 	 * @param h		the host address of the player's machine
@@ -55,8 +56,9 @@ public class PlayerImpl
 	public boolean isMyTurn() { return myTurn; }
 	
 	/** {@inheritDoc} */ 
-	public void setMyTurn(boolean b) throws RemoteException {
+	public synchronized void setMyTurn(boolean b) throws RemoteException {
 		myTurn = b;
+		notify();
 	}
 	
 	/** @param type the personality Type */
@@ -65,18 +67,18 @@ public class PlayerImpl
 	/**
 	 * As long as the objective is not reached for each resource, one
 	 * must keep playing.
-	 * @return true if the objective is not yet reached, false if it is
+	 * @return true if the objective is yet reached, false if not
 	 */ 
-	public boolean isObjectiveNotReached() {
+	public boolean isObjectiveReached() {
 		if (resources == null) {
-			return true;
+			return false;
 		}
 		for (int i=0; i<resources.size(); i++) {
 			if (resources.get(i).getLeftToFind() > 0) {
-				return true;
+				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 	
 	/** {@inheritDoc} */ 
@@ -154,20 +156,22 @@ public class PlayerImpl
 	}
 	
 	/**
-	 * Takes as many copies as necessary to fullfil our objective.
+	 * Takes as many copies as necessary to fullfil our objective. If the
+	 * player is a human, they will be asked for input.
+	 * @param human		true if the player is a human
 	 * @exception RemoteException exception occurred during remote call
 	 */ 
-	public void makeMove() throws RemoteException {
+	public void makeMove(boolean human) throws RemoteException {
 		Producer p;
 		Resource r;
 		int copies = 0;
-		
+
 		// cycle through resources that are not yet complete
 		do {
 			r = resources.get(nextRess);
 			nextRess = (nextRess+1)%resources.size();
-		} while (r.getLeftToFind() == 0 && isObjectiveNotReached());
-
+		} while (r.getLeftToFind() == 0 && !isObjectiveReached());
+		
 		List<Producer> prods = r.getProducers();
 		if (observingAllowed) { //choose producer with the most copies
 			int max = 0, nbRess = prods.get(0).getNbCopies();
@@ -182,10 +186,34 @@ public class PlayerImpl
 			int i = ThreadLocalRandom.current().nextInt(0, prods.size());
 			p = prods.get(i);
 		}
+
 		copies = p.takeCopies(r.getLeftToFind());
-		r.addCopies(copies);
-		System.out.println("Took "+copies+" of resource "+p.getResourceType());
+		if (copies != 0) {
+			r.addCopies(copies);
+			System.out.println("Took "+copies+" of R"+p.getResourceType());
+		}
 		myTurn = false;
+		if (isObjectiveReached()) roundCoord.playerFinished();
+		roundCoord.turnFinished();
+	}
+	
+	public synchronized void waitForTurn() {
+		while(!isMyTurn()) {
+			try {
+				wait();
+			} catch (InterruptedException e) {}
+		}
+	}
+	
+	public synchronized void waitForRound() {
+		try {
+			while(!roundCoord.isRoundOngoing()) {
+				try {
+					wait();
+				} catch (InterruptedException e) {}
+			}
+		}
+		catch (RemoteException re) { System.out.println(re) ; }
 	}
 
 	/**
@@ -223,16 +251,38 @@ public class PlayerImpl
 			gameCoord.addPlayer(hostIP,args[0]);
 			if (isHuman) gameCoord.hasHumanPlayer();
 			
-			System.out.println("Player running");
+			System.out.println("Player running, waiting for game");
+			/* wait for RoundCoordinator */
 			do {
-				if (j.isMyTurn()) {
-					j.makeMove();
-				}
-				Thread.sleep(1000);
-			} while (j.isObjectiveNotReached());
-			
+				Thread.sleep(500);
+			} while (j.getRoundCoordinator() == null);
 			RoundCoordinator coord = j.getRoundCoordinator();
-			coord.playerFinished();
+			
+			/* wait for round to start */
+			do {
+				Thread.sleep(500);
+			} while (!coord.isRoundOngoing());
+			
+			System.out.println("Round started");
+
+			if (coord.isTurnsSet()) {
+				/* always wait for my turn */
+				do {
+					j.waitForTurn();
+					if (isHuman){
+						j.makeMove(true);
+					} else {
+						j.makeMove(false);
+					}
+				} while (!j.isObjectiveReached());
+			} else {
+				/* grab ressources as soon as possible but wait a bit */
+				do {
+					j.makeMove(false);
+					Thread.sleep(500);
+				} while (!j.isObjectiveReached());
+			}
+			
 			System.out.println("Round finished!");
 		} 
 		catch (RemoteException re) { System.err.println(re) ; }

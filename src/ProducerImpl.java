@@ -59,12 +59,13 @@ public class ProducerImpl
 		} else if (n <= nbCopies) {
 			nbCopies -= n;
 			r = n;
+			System.out.println(r+" copies taken. "+nbCopies+" left");
 		} else {
 			int tmp = nbCopies;
 			nbCopies = 0;
 			r = tmp;
+			System.out.println(r+" copies taken. "+nbCopies+" left");
 		}
-		System.out.println("copies taken. total:"+nbCopies);
 		return r;
 	}
 	
