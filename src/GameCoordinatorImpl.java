@@ -11,11 +11,18 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 
+/**
+ * This class is the implementation of the remote interface GameCoordinator.
+ * To create a new game, this must be the first program to be executed, 
+ * as it will keep track of the agents. In fact, to be part of the game, 
+ * producers and players must "register" themselves with a remote call. 
+ * 
+ * @see GameCoordinator
+ */ 
 public class GameCoordinatorImpl 
 		extends UnicastRemoteObject 
 		implements GameCoordinator 
 {
-	private boolean gameOngoing = false;
 	private ArrayList<Agent> competitors = new ArrayList<Agent>();
 	private Map<Agent,Integer> producers = new HashMap<Agent,Integer>();
 	
@@ -61,6 +68,12 @@ public class GameCoordinatorImpl
 		return producers;
 	}
 	
+	/**
+	 * Starts the game by creating a distant object that will be called
+	 * by the other agents. The coordinator's rmiregistry port must be 
+	 * given in the command line.
+	 * @param args		the command line options
+	 */ 
 	public static void main(String args[]) {
 		if (args.length != 1) {
 			System.out.println("Usage : java GameCoordinatorImpl <port>") ;
@@ -68,15 +81,13 @@ public class GameCoordinatorImpl
 		}
 		
 		String bindname = "rmi://localhost:"+args[0]+"/GameCoordinator";
-		
 		try {
 			GameCoordinatorImpl gameCoord = new GameCoordinatorImpl();
 			Naming.rebind(bindname,gameCoord) ;
 			System.out.println("Game Coordinator running");
 			
 		} 
-		catch (RemoteException re) { System.out.println(re) ; }
-		catch (MalformedURLException e) { System.out.println(e) ; }
-		
+		catch (RemoteException e) {System.err.println(e); System.exit(1); }
+		catch (MalformedURLException e) {System.err.println(e); System.exit(1); }
 	}
 }

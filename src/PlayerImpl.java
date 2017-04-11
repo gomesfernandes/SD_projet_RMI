@@ -14,8 +14,13 @@ import java.util.Map;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Iterator;
-//import Player ;
 
+/**
+ * This class is the implementation of the remote interface Player. 
+ * A player's goal is to get resources from one or more producers until
+ * the number of copies per resources fulfils an objective.
+ * @see Player
+ */ 
 public class PlayerImpl 
 		extends UnicastRemoteObject 
 		implements Player 
@@ -30,13 +35,31 @@ public class PlayerImpl
 	private int nextProd = 0;
 	private RoundCoordinator roundCoord;
 	
+	/**
+	 * @param h		the host address of the player's machine
+	 * @param p		the player's port
+	 * @exception RemoteException exception occurred during remote call
+	 */ 
 	public PlayerImpl(String h, String p) throws RemoteException {
 		host = h;
 		port = p;
 	}
 	
+	/**
+	 * @return true if it's the player's turn, false if not
+	 */ 
 	public boolean isMyTurn() { return myTurn; }
 	
+	/** {@inheritDoc} */ 
+	public void setMyTurn(boolean b) throws RemoteException {
+		myTurn = b;
+	}
+	
+	/**
+	 * As long as the objective is not reached for each resource, one
+	 * must keep playing.
+	 * @return true if the objective is not yet reached, false if it is
+	 */ 
 	public boolean isObjectiveNotReached() {
 		if (resources == null) return true;
 		for (int i=0; i<resources.size(); i++) {
@@ -46,10 +69,12 @@ public class PlayerImpl
 		return false;
 	}
 	
+	/** {@inheritDoc} */ 
 	public void setObjective(int o) throws RemoteException {
 		objective = o;
 	}
 	
+	/** {@inheritDoc} */ 
 	public void setPlayers(ArrayList<Agent> j)throws RemoteException {
 		competitors = new ArrayList<Player>();
 		Iterator<Agent> playerIter = j.iterator();
@@ -69,6 +94,7 @@ public class PlayerImpl
 		}
 	}
 	
+	/** {@inheritDoc} */ 
 	public void setProducers(Map<Agent,Integer> p) throws RemoteException {
 		producers = new ArrayList<Producer>();
 		resources = new ArrayList<Resource>();
@@ -96,7 +122,7 @@ public class PlayerImpl
 		}
 	}
 	
-	
+	/** {@inheritDoc} */ 
 	public void setRoundCoordinator(String host, String port) 
 											throws RemoteException {
 		try
@@ -109,22 +135,16 @@ public class PlayerImpl
 		catch (MalformedURLException e) { System.out.println(e) ; }
 	}
 	
+	/** @return the coordinator of the round
+	 */ 
 	public RoundCoordinator getRoundCoordinator() {
 		return roundCoord;
 	}
 	
 	/**
-	 * @brief Indicate that it's the players' turn.
+	 * Takes as many copies as necessary to fullfil our objective.
+	 * @exception RemoteException exception occurred during remote call
 	 */ 
-	public void setMyTurn(boolean b) throws RemoteException {
-		myTurn = b;
-	}
-	
-	//public int steal(Player p) throws RemoteException {}
-	//public int getResource(int type, int n) throws RemoteException {
-	//	producers[type].takeCopies(n);
-	//}
-	
 	public void makeMove() throws RemoteException {
 		int copies = 0;
 		Producer p = producers.get(nextProd);
@@ -136,6 +156,12 @@ public class PlayerImpl
 		myTurn = false;
 	}
 
+	/**
+	 * Launches a player that connects to the GameCoordinator, then waits
+	 * for his turn to play. When he finishes a round, he contacts the
+	 * coordinator of the round.
+	 * @param args		the command line options
+	 */ 
 	public static void main(String args[]) {
 		if (args.length != 3) {
 			System.out.println("Usage : java PlayerImpl <port>" +

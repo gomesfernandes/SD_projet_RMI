@@ -10,8 +10,14 @@ import java.rmi.* ;
 import java.net.InetAddress;
 import java.net.MalformedURLException ;
 import java.net.UnknownHostException;
-//import Producer;
 
+/**
+ * This class is the implementation of the remote interface Producer. 
+ * A producer creates a single type of resource. It starts with 50 copies,
+ * and then, once production is started by a coordinator, it producers 
+ * 5 more copies each second.
+ * @see Producer
+ */ 
 public class ProducerImpl 
 		extends UnicastRemoteObject 
 		implements Producer 
@@ -21,15 +27,14 @@ public class ProducerImpl
 	private int resourceType;
 	
 	/**
-	 * @brief Producer constructor 
 	 * @param an integer representing the type of resource to produce
 	 */ 
 	public ProducerImpl(int rtype) throws RemoteException {
 			resourceType = rtype;
 	}
 
-	/**
-	 * @brief Produces 5 new nbCopies of the resource.  
+	/** 
+	 * Produce 5 new copies of the resource.
 	 */ 
 	public synchronized void produce() throws RemoteException {
 		if (productionOngoing) {
@@ -38,17 +43,12 @@ public class ProducerImpl
 		}
 	}
 	
+	/** {@inheritDoc} */
 	public int getResourceType() throws RemoteException {
 		return resourceType;
 	}
 	
-	/**
-	 * @brief Allows a player to ask for n nbCopies of the resource.  
-	 * If there are less nbCopies than n, the remaining number of nbCopies
-	 * is returned. If n < 0, nothing is returned.
-	 * @param number of nbCopies desired
-	 * @return number of nbCopies actually returned 
-	 */ 
+	/** {@inheritDoc} */
 	public synchronized int takeCopies(int n) throws RemoteException {
 		int r;
 		if (n <= 0) {
@@ -65,18 +65,22 @@ public class ProducerImpl
 		return r;
 	}
 	
-	/**
-	 * @brief Launches or stops the production.
-	 */ 
+	/** {@inheritDoc} */
 	public void startProduction() throws RemoteException {
 		productionOngoing = true;
 		System.out.println("Production of R"+resourceType+" started");
 	}
+	/** {@inheritDoc} */
 	public void stopProduction() throws RemoteException {
 		productionOngoing = false;
 		System.out.println("Production of R"+resourceType+" stopped");
 	}
 
+	/**
+	 * Launches a producer that connects to the GameCoordinator, then 
+	 * waits for the production go.
+	 * @param args		the command line options
+	 */ 
 	public static void main(String args[]) {
 		
 		if (args.length != 4) {

@@ -34,8 +34,13 @@ public class RoundCoordinatorImpl
 	
 	public RoundCoordinatorImpl() throws RemoteException {}
 
+	/** @return true if the round is finished, false if not */
 	public boolean isRoundOngoing() { return roundOngoing; }
 
+	/** Chooses who's turn it is. The first player is chosen randomly, 
+	 * then it cycles through the list of players.
+	 * @return the index of the next player
+	 */
 	public int nextPlayer() {
 		if (currentPlayer == -1) {
 			currentPlayer = ThreadLocalRandom.current().nextInt(0, players.size());
@@ -45,19 +50,23 @@ public class RoundCoordinatorImpl
 		return currentPlayer;
 	}
 
+	/** @param p Player to add to the list of players  */
 	public void addPlayer(Player p) {
 		players.add(p);
 	}
 	
+	/** @return the list of players  */
+	public ArrayList<Player> getPlayers() {return players;}
+	
+	/** @param p Producer to add to the list of producers */
 	public void addProducer(Producer p) {
 		producers.add(p);
 	}
-	public ArrayList<Player> getPlayers() {return players;}
+	
+	/** @return the list of producers  */
 	public ArrayList<Producer> getProducers() {return producers;}
 
-	/**
-	 * @brief Marks the round as finished.
-	 */
+	/** {@inheritDoc} */
 	public void playerFinished() throws RemoteException {
 		nbFinishedPlayers++;
 		if (nbFinishedPlayers == 1) {
@@ -68,16 +77,25 @@ public class RoundCoordinatorImpl
 		}
 	}
 	
+	/** @return index of the first player to finish the round */
+	public int getWinner() { return winner; }
+	
+	/** 
+	 * Signals to all producers to stop their productions.
+	 * @exception RemoteException exception occurred during remote call
+	 */
 	public void stopProduction() throws RemoteException {
 		for (int i=0; i<producers.size(); i++) {
 			producers.get(i).stopProduction();
 		}
 	}
 	
-	public int getWinner() {
-		return winner;
-	}
 	
+	/**
+	 * Starts a new round of the game. Through the GameCoordinator,
+	 * the RoundCoordinator knows all players and producers.
+	 * @param args		the command line options
+	 */
 	public static void main(String args[]) {
 		if (args.length != 3) {
 			System.out.println("Usage : java RoundCoordinatorImpl <port>"+
@@ -114,6 +132,7 @@ public class RoundCoordinatorImpl
 			} 
 			
 			/* ask for paramterers */
+			/*
 			Set<Integer> resourcesSet = new HashSet<Integer>();
 			resourcesSet.addAll(producerLocations.values());
 			Scanner reader = new Scanner(System.in);
@@ -126,8 +145,8 @@ public class RoundCoordinatorImpl
 					objective = reader.nextInt();
 				}
 			}
+			*/
 			
-			/* 
 			Scanner reader = new Scanner(System.in);
 			System.out.println("Set the number of resources to find (>=50): ");
 			int objective = reader.nextInt();
@@ -135,7 +154,6 @@ public class RoundCoordinatorImpl
 				System.out.println("Not a possible number. Try again: ");
 				objective = reader.nextInt();
 			}
-			* */
 			
 			/* Tell players where to find competitors and resources */
 			Iterator<Agent> playerIter = playerLocations.iterator();
