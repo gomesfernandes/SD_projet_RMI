@@ -1,3 +1,8 @@
+/*
+ * Gomes Fernandes Caty
+ * Université de Strasbourg
+ * Licence 3 Informatique, S6 Printemps, 2017
+ */
 import java.rmi.server.UnicastRemoteObject ;
 import java.rmi.RemoteException ;
 import java.net.* ;
@@ -18,11 +23,12 @@ public class PlayerImpl
 	private int objective;
 	private ArrayList<Player> competitors;
 	private ArrayList<Producer> producers;
-	private ArrayList<Ressource> ressources;
-	private boolean myTurn;
+	private ArrayList<Resource> resources;
+	private boolean myTurn = false;
 	private String host;
 	private String port;
 	private int nextProd = 0;
+	private RoundCoordinator roundCoord;
 	
 	public PlayerImpl(String h, String p) throws RemoteException {
 		host = h;
@@ -31,13 +37,13 @@ public class PlayerImpl
 	
 	public boolean isMyTurn() { return myTurn; }
 	
-	public boolean isObjectiveReached() {
-		if (ressources == null) return false;
-		for (int i=0; i<ressources.size(); i++) {
-			if (ressources.get(i).getNbCopies() < objective)
-				return false;
+	public boolean isObjectiveNotReached() {
+		if (resources == null) return true;
+		for (int i=0; i<resources.size(); i++) {
+			if (resources.get(i).getNbCopies() < objective)
+				return true;
 		}
-		return true;
+		return false;
 	}
 	
 	public void setObjective(int o) throws RemoteException {
@@ -65,7 +71,7 @@ public class PlayerImpl
 	
 	public void setProducers(Map<Agent,Integer> p) throws RemoteException {
 		producers = new ArrayList<Producer>();
-		ressources = new ArrayList<Ressource>();
+		resources = new ArrayList<Resource>();
 		
 		Iterator<Agent> producerIter = p.keySet().iterator();
 		while (producerIter.hasNext()) {
@@ -75,11 +81,11 @@ public class PlayerImpl
 							a.getHost()+ ":" + a.getPort() + "/Producer");
 				producers.add(prod);
 				
-				Ressource r = new Ressource(p.get(a));
-				if (!ressources.contains(r)) {
-					ressources.add(r);
+				Resource r = new Resource(p.get(a));
+				if (!resources.contains(r)) {
+					resources.add(r);
 				} else {
-					r = ressources.get(ressources.indexOf(r));
+					r = resources.get(resources.indexOf(r));
 				}
 				r.addProducer(prod);
 			} catch (NotBoundException re) { 
@@ -90,6 +96,23 @@ public class PlayerImpl
 		}
 	}
 	
+	
+	public void setRoundCoordinator(String host, String port) 
+											throws RemoteException {
+		try
+		{
+			roundCoord = (RoundCoordinator) Naming.lookup(
+			"rmi://" + host + ":" + port + "/RoundCoordinator") ;
+		}
+		catch (NotBoundException re) { System.out.println(re) ; }
+		catch (RemoteException re) { System.out.println(re) ; }
+		catch (MalformedURLException e) { System.out.println(e) ; }
+	}
+	
+	public RoundCoordinator getRoundCoordinator() {
+		return roundCoord;
+	}
+	
 	/**
 	 * @brief Indicate that it's the players' turn.
 	 */ 
@@ -98,7 +121,7 @@ public class PlayerImpl
 	}
 	
 	//public int steal(Player p) throws RemoteException {}
-	//public int getRessource(int type, int n) throws RemoteException {
+	//public int getResource(int type, int n) throws RemoteException {
 	//	producers[type].takeCopies(n);
 	//}
 	
@@ -106,10 +129,11 @@ public class PlayerImpl
 		int copies = 0;
 		Producer p = producers.get(nextProd);
 		copies = p.takeCopies(objective);
-		int i = ressources.indexOf(new Ressource(p.getRessourceType()));
-		ressources.get(i).addCopies(copies);
+		int i = resources.indexOf(new Resource(p.getResourceType()));
+		resources.get(i).addCopies(copies);
 		nextProd = (nextProd+1)%producers.size();
-		System.out.println("Took "+copies+"of ressource "+p.getRessourceType());
+		System.out.println("Took "+copies+" of resource "+p.getResourceType());
+		myTurn = false;
 	}
 
 	public static void main(String args[]) {
@@ -139,15 +163,18 @@ public class PlayerImpl
 				if (j.isMyTurn()) {
 					j.makeMove();
 				}
-			} while (!j.isObjectiveReached());
+				Thread.sleep(1000);
+			} while (j.isObjectiveNotReached());
 			
-			
+			RoundCoordinator coord = j.getRoundCoordinator();
+			coord.playerFinished();
+			System.out.println("Round finished!");
 		} 
 		catch (RemoteException re) { System.err.println(re) ; }
 		catch (AlreadyBoundException e) { System.err.println(e) ; }
 		catch (MalformedURLException e) { System.err.println(e) ; }
 		catch (NotBoundException re) { System.err.println(re) ; }
 		catch (UnknownHostException re) { System.err.println(re) ; }
-		
+		catch (Exception e) {}
 	}
 }

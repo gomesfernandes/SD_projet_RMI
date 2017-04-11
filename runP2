@@ -1,0 +1,2 @@
+cd bin
+rmiregistry 3005 & java PlayerImpl 3005 localhost 3000

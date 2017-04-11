@@ -1,11 +1,21 @@
+/*
+ * Gomes Fernandes Caty
+ * Université de Strasbourg
+ * Licence 3 Informatique, S6 Printemps, 2017
+ */
 import java.util.List;
 import java.util.ArrayList;
 
-public class Ressource {
+/**
+ * 
+ * @see Producer
+ * @see Re
+ */ 
+public class Resource {
 	private Integer type;
 	private List<Producer> producers = new ArrayList<Producer>();
 	private int nbCopies = 0;
-	public Ressource(int t) {
+	public Resource(int t) {
 		type = t;
 	}
 	
@@ -20,8 +30,8 @@ public class Ressource {
 	
 	public boolean equals(Object object) {
         boolean same = false;
-        if (object != null && object instanceof Ressource) {
-			Ressource r = (Ressource) object;
+        if (object != null && object instanceof Resource) {
+			Resource r = (Resource) object;
             if (this.type == r.type )
 				same = true;
         }

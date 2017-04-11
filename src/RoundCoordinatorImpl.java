@@ -1,3 +1,8 @@
+/*
+ * Gomes Fernandes Caty
+ * Université de Strasbourg
+ * Licence 3 Informatique, S6 Printemps, 2017
+ */
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.net.* ;
@@ -5,8 +10,13 @@ import java.rmi.* ;
 import java.net.MalformedURLException ;
 import java.util.Scanner; 
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.net.UnknownHostException;
+import java.net.InetAddress;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class RoundCoordinatorImpl 
 		extends UnicastRemoteObject 
@@ -16,17 +26,56 @@ public class RoundCoordinatorImpl
 	private int delay;
 	private int endType;
 	private int personalityType;
+	ArrayList<Player> players = new ArrayList<Player>();
+	ArrayList<Producer> producers = new ArrayList<Producer>();
+	private int nbFinishedPlayers = 0;
+	private int currentPlayer = -1;
+	private int winner = -1;
 	
 	public RoundCoordinatorImpl() throws RemoteException {}
 
 	public boolean isRoundOngoing() { return roundOngoing; }
 
+	public int nextPlayer() {
+		if (currentPlayer == -1) {
+			currentPlayer = ThreadLocalRandom.current().nextInt(0, players.size());
+		} else {
+			currentPlayer = (currentPlayer+1)%players.size();
+		}
+		return currentPlayer;
+	}
+
+	public void addPlayer(Player p) {
+		players.add(p);
+	}
+	
+	public void addProducer(Producer p) {
+		producers.add(p);
+	}
+	public ArrayList<Player> getPlayers() {return players;}
+	public ArrayList<Producer> getProducers() {return producers;}
+
 	/**
 	 * @brief Marks the round as finished.
 	 */
 	public void playerFinished() throws RemoteException {
-		roundOngoing = false;
-		//notify GameCoordinator ? 
+		nbFinishedPlayers++;
+		if (nbFinishedPlayers == 1) {
+			winner = currentPlayer;
+		}
+		if (nbFinishedPlayers == players.size()) {
+			roundOngoing = false;
+		}
+	}
+	
+	public void stopProduction() throws RemoteException {
+		for (int i=0; i<producers.size(); i++) {
+			producers.get(i).stopProduction();
+		}
+	}
+	
+	public int getWinner() {
+		return winner;
 	}
 	
 	public static void main(String args[]) {
@@ -35,17 +84,19 @@ public class RoundCoordinatorImpl
 								" <GameCoord Host> <GameCoord Port>") ;
 			System.exit(0) ;
 		}
-		
+	
 		String bindname="rmi://localhost:"+args[0]+"/RoundCoordinator";
 
 		try {
+			String hostIP = InetAddress.getLocalHost().getHostAddress();
+			
 			/* access game coordinator */
 			GameCoordinator gameCoord = (GameCoordinator) Naming.lookup(
 				"rmi://" + args[1] + ":" + args[2] + "/GameCoordinator");
 			
 			/* create accessible object for this round */
 			RoundCoordinatorImpl roundCoord = new RoundCoordinatorImpl();
-			Naming.bind(bindname,roundCoord) ;
+			Naming.rebind(bindname,roundCoord) ;
 			System.out.println("round Coordinator running");
 			
 			/* Get information from GameCoordinator */
@@ -63,50 +114,71 @@ public class RoundCoordinatorImpl
 			} 
 			
 			/* ask for paramterers */
+			Set<Integer> resourcesSet = new HashSet<Integer>();
+			resourcesSet.addAll(producerLocations.values());
 			Scanner reader = new Scanner(System.in);
-			System.out.println("Set the number of ressources to find (>=50): ");
+			int objective = 51;
+			for (Integer s : resourcesSet) {
+				System.out.println("Set objective for R"+s+"(>=50): ");
+				objective = reader.nextInt();
+				while (objective < 50) {
+					System.out.println("Not a possible number. Try again: ");
+					objective = reader.nextInt();
+				}
+			}
+			
+			/* 
+			Scanner reader = new Scanner(System.in);
+			System.out.println("Set the number of resources to find (>=50): ");
 			int objective = reader.nextInt();
 			while (objective < 50) {
 				System.out.println("Not a possible number. Try again: ");
 				objective = reader.nextInt();
 			}
+			* */
 			
-			/* Tell players where to find competitors and ressources */
-			ArrayList<Player> players = new ArrayList<Player>();
+			/* Tell players where to find competitors and resources */
 			Iterator<Agent> playerIter = playerLocations.iterator();
 			while (playerIter.hasNext()) {
 				Agent a = playerIter.next();
 				Player p = (Player) Naming.lookup("rmi://"+ 
 						a.getHost()+ ":" + a.getPort() + "/Player");
-				players.add(p);
+				roundCoord.addPlayer(p);
 				p.setObjective(objective);
 				p.setPlayers(playerLocations);
 				p.setProducers(producerLocations);
+				p.setRoundCoordinator(hostIP,args[0]);
 			}
 			
 			/* Tell producers to start producing */
-			ArrayList<Producer> producers = new ArrayList<Producer>();
 			Iterator<Agent> prodIter = producerLocations.keySet().iterator();
 			while (prodIter.hasNext()) {
 				Agent a = prodIter.next();
 				Producer p = (Producer) Naming.lookup("rmi://"+ a.getHost()+ 
 										":" + a.getPort() + "/Producer");
-				producers.add(p);
+				roundCoord.addProducer(p);
 				p.startProduction();
 			}
 			
-			int nextPlayer = 0, nbPlayers = players.size();
-			
+			int next = roundCoord.nextPlayer();
+			System.out.println("Stating with player "+next);
 			while (roundCoord.isRoundOngoing()) {
-				Player p = players.get(nextPlayer);
+				Player p = roundCoord.getPlayers().get(next);
 				p.setMyTurn(true);
-				nextPlayer = (nextPlayer+1)%nbPlayers;
+				next = roundCoord.nextPlayer();
+				Thread.sleep(1000);
 			}
 			
+			System.out.println("Round over");
+			System.out.println("The winner is player "+roundCoord.getWinner());
+			roundCoord.stopProduction();
+			//gameCoord.endGame();
+			System.exit(0);
 		} 
 		catch (RemoteException re) { System.err.println(re) ; }
-		catch (AlreadyBoundException e) { System.err.println(e) ; }
 		catch (MalformedURLException e) { System.err.println(e) ; }
 		catch (NotBoundException re) { System.err.println(re) ; }
+		catch (UnknownHostException e) {}
+		catch (Exception e) {}
 	}
 }

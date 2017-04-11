@@ -1,3 +1,8 @@
+/*
+ * Gomes Fernandes Caty
+ * Université de Strasbourg
+ * Licence 3 Informatique, S6 Printemps, 2017
+ */
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.net.* ;
@@ -17,18 +22,7 @@ public class GameCoordinatorImpl
 	public GameCoordinatorImpl() throws RemoteException {}
 	
 	/**
-	 * @brief Marks the end of the game
-	 */ 
-	public void endGame() throws RemoteException {
-		// tell others to quit? 
-		System.exit(0) ;
-	}	
-	
-	/**
-	 * @brief Adds a new producer to the corresponding list of agents
-	 * @param host the host address of the producer
-	 * @param port the port address
-	 * @param r the type of ressource it produces
+	 * {@inheritDoc}
 	 */ 
 	public void addProducer(String host,String port, Integer r) 
 											throws RemoteException {
@@ -40,31 +34,29 @@ public class GameCoordinatorImpl
 	}
 	
 	/**
-	 * @brief Adds a new player to the corresponding list of agents
-	 * @param host the host address of the player
-	 * @param port the port address
+	 * {@inheritDoc}
 	 */ 
 	public void addPlayer(String host,String port) throws RemoteException {
 		competitors.add(new Agent(host,port,Agent.PLAYER));
 		System.out.println("Added player : "+host+","+port);
 	}
-	
-	/**
-	 * @brief Mark the start of the game.
-	 */ 
-	public void setGameOngoing() throws RemoteException {
-		gameOngoing = true;
-	}
-	
+
+	/** {@inheritDoc} */ 
 	public int getNumberPlayers() throws RemoteException {
 		return competitors.size();
 	}
+	
+	/** {@inheritDoc} */ 
 	public int getNumberProducers() throws RemoteException {
 		return producers.size();
 	}
+	
+	/** {@inheritDoc} */ 
 	public ArrayList<Agent> getPlayers() throws RemoteException {
 		return competitors;
 	}
+	
+	/** {@inheritDoc} */ 
 	public Map<Agent,Integer> getProducers() throws RemoteException {
 		return producers;
 	}
@@ -79,12 +71,11 @@ public class GameCoordinatorImpl
 		
 		try {
 			GameCoordinatorImpl gameCoord = new GameCoordinatorImpl();
-			Naming.bind(bindname,gameCoord) ;
+			Naming.rebind(bindname,gameCoord) ;
 			System.out.println("Game Coordinator running");
 			
 		} 
 		catch (RemoteException re) { System.out.println(re) ; }
-		catch (AlreadyBoundException e) { System.out.println(e) ; }
 		catch (MalformedURLException e) { System.out.println(e) ; }
 		
 	}

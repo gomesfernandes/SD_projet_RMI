@@ -1,3 +1,8 @@
+/*
+ * Gomes Fernandes Caty
+ * Université de Strasbourg
+ * Licence 3 Informatique, S6 Printemps, 2017
+ */
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.net.* ;
@@ -13,48 +18,51 @@ public class ProducerImpl
 {
 	private int nbCopies = 50;
 	private boolean productionOngoing = false;
-	private int ressourceType;
+	private int resourceType;
 	
 	/**
 	 * @brief Producer constructor 
-	 * @param an integer representing the type of ressource to produce
+	 * @param an integer representing the type of resource to produce
 	 */ 
 	public ProducerImpl(int rtype) throws RemoteException {
-			ressourceType = rtype;
+			resourceType = rtype;
 	}
 
 	/**
-	 * @brief Produces 5 new nbCopies of the ressource.  
+	 * @brief Produces 5 new nbCopies of the resource.  
 	 */ 
 	public synchronized void produce() throws RemoteException {
 		if (productionOngoing) {
 			nbCopies+=5;
-			System.out.println("5 new copies of ressource");
+			System.out.println("5 new copies of R"+resourceType+". total:"+nbCopies);
 		}
 	}
 	
-	public int getRessourceType() throws RemoteException {
-		return ressourceType;
+	public int getResourceType() throws RemoteException {
+		return resourceType;
 	}
 	
 	/**
-	 * @brief Allows a player to ask for n nbCopies of the ressource.  
+	 * @brief Allows a player to ask for n nbCopies of the resource.  
 	 * If there are less nbCopies than n, the remaining number of nbCopies
 	 * is returned. If n < 0, nothing is returned.
 	 * @param number of nbCopies desired
 	 * @return number of nbCopies actually returned 
 	 */ 
 	public synchronized int takeCopies(int n) throws RemoteException {
+		int r;
 		if (n <= 0) {
-			return 0;
+			r = 0;
 		} else if (n <= nbCopies) {
 			nbCopies -= n;
-			return n;
+			r = n;
 		} else {
 			int tmp = nbCopies;
 			nbCopies = 0;
-			return tmp;
+			r = tmp;
 		}
+		System.out.println("copies taken. total:"+nbCopies);
+		return r;
 	}
 	
 	/**
@@ -62,17 +70,17 @@ public class ProducerImpl
 	 */ 
 	public void startProduction() throws RemoteException {
 		productionOngoing = true;
-		System.out.println("Production of ressource started");
+		System.out.println("Production of R"+resourceType+" started");
 	}
 	public void stopProduction() throws RemoteException {
 		productionOngoing = false;
-		System.out.println("Production of ressource stopped");
+		System.out.println("Production of R"+resourceType+" stopped");
 	}
 
 	public static void main(String args[]) {
 		
 		if (args.length != 4) {
-			System.out.println("Usage : java ProducerImpl <ressource type>" 
+			System.out.println("Usage : java ProducerImpl <resource type>" 
 						+" <port> <GameCoord Host> <GameCoord Port>") ;
 			System.exit(0) ;
 		}
@@ -99,7 +107,7 @@ public class ProducerImpl
 			}
 		} 
 		catch (NumberFormatException e) { 
-			System.out.println("Not a ressource"); 
+			System.out.println("Not a resource"); 
 			System.out.println(e) ; 
 		}
 		catch (AlreadyBoundException e) {
