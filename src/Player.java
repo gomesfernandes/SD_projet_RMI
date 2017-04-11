@@ -18,7 +18,7 @@ public interface Player extends Remote {
 	 * @param int		the number of copies to find for all resources
 	 * @exception RemoteException exception occurred during remote call
 	 */ 
-	public void setObjective(int o) throws RemoteException ;
+	public void setObjective(Map<Integer,Integer> o) throws RemoteException ;
 	
 	/**
 	 * Provides the addresses of all the players in the game.

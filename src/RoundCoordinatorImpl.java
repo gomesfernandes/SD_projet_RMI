@@ -12,6 +12,7 @@ import java.util.Scanner;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.net.UnknownHostException;
@@ -132,28 +133,29 @@ public class RoundCoordinatorImpl
 			} 
 			
 			/* ask for paramterers */
-			/*
 			Set<Integer> resourcesSet = new HashSet<Integer>();
 			resourcesSet.addAll(producerLocations.values());
 			Scanner reader = new Scanner(System.in);
-			int objective = 51;
-			for (Integer s : resourcesSet) {
-				System.out.println("Set objective for R"+s+"(>=50): ");
-				objective = reader.nextInt();
-				while (objective < 50) {
+			Map<Integer,Integer> objectives = new HashMap<Integer,Integer>();
+			int o = 51;
+			for (Integer r : resourcesSet) {
+				System.out.println("Set objective for R"+r+"(>=50): ");
+				o = reader.nextInt();
+				while (o < 50) {
 					System.out.println("Not a possible number. Try again: ");
-					objective = reader.nextInt();
+					o = reader.nextInt();
 				}
+				objectives.put(r,o);
 			}
-			*/
 			
+			/*
 			Scanner reader = new Scanner(System.in);
 			System.out.println("Set the number of resources to find (>=50): ");
 			int objective = reader.nextInt();
 			while (objective < 50) {
 				System.out.println("Not a possible number. Try again: ");
 				objective = reader.nextInt();
-			}
+			*/
 			
 			System.out.println("Contacting players");
 			
@@ -167,7 +169,7 @@ public class RoundCoordinatorImpl
 				p.setPlayers(playerLocations);
 				p.setProducers(producerLocations);
 				p.setRoundCoordinator(hostIP,args[0]);
-				p.setObjective(objective);
+				p.setObjective(objectives);
 			}
 			
 			System.out.println("Contacting producers");

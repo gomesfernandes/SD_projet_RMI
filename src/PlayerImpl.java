@@ -76,10 +76,10 @@ public class PlayerImpl
 	}
 	
 	/** {@inheritDoc} */ 
-	public void setObjective(int o) throws RemoteException {
+	public void setObjective(Map<Integer,Integer> o) throws RemoteException {
 		for (Resource r: resources) {
+			r.setObjective(o.get(r.getType()));
 			System.out.println("Objective set for resource type "+r.getType());
-			r.setObjective(o);
 		}
 	}
 	
