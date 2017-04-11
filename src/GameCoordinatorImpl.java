@@ -23,14 +23,24 @@ public class GameCoordinatorImpl
 		extends UnicastRemoteObject 
 		implements GameCoordinator 
 {
+	private boolean humanPlayer = false;
 	private ArrayList<Agent> competitors = new ArrayList<Agent>();
 	private Map<Agent,Integer> producers = new HashMap<Agent,Integer>();
 	
 	public GameCoordinatorImpl() throws RemoteException {}
 	
-	/**
-	 * {@inheritDoc}
-	 */ 
+	/** {@inheritDoc} */ 
+	public void hasHumanPlayer() throws RemoteException {
+		System.out.println("Human detected");
+		humanPlayer = true;
+	}
+	
+	/** {@inheritDoc} */ 
+	public boolean isHumanPresent() throws RemoteException {
+		return humanPlayer;
+	}
+	
+	/** {@inheritDoc} */  
 	public void addProducer(String host,String port, Integer r) 
 											throws RemoteException {
 		Agent a = new Agent(host,port,Agent.PRODUCER);
@@ -40,9 +50,7 @@ public class GameCoordinatorImpl
 		System.out.println("Added producer : "+host+","+port+","+r);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */ 
+	/** {@inheritDoc} */ 
 	public void addPlayer(String host,String port) throws RemoteException {
 		competitors.add(new Agent(host,port,Agent.PLAYER));
 		System.out.println("Added player : "+host+","+port);

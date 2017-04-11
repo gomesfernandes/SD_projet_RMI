@@ -23,10 +23,11 @@ public class RoundCoordinatorImpl
 		extends UnicastRemoteObject 
 		implements RoundCoordinator 
 {
+	
 	private boolean roundOngoing = true;
-	private int delay;
+	private boolean hasTurns = true;
+	private int delay = 500; //ms
 	private int endType;
-	private int personalityType;
 	ArrayList<Player> players = new ArrayList<Player>();
 	ArrayList<Producer> producers = new ArrayList<Producer>();
 	private int nbFinishedPlayers = 0;
@@ -34,6 +35,13 @@ public class RoundCoordinatorImpl
 	private int winner = -1;
 	
 	public RoundCoordinatorImpl() throws RemoteException {}
+	
+	/** @param b  true if the players should take turns, false otherwise */ 
+	public void setTurns(boolean b) { 
+		hasTurns = b; 
+		if (b) System.out.println("Players will take turns");
+		else System.out.println("Players do not take turns");
+	}
 
 	/** @return true if the round is finished, false if not */
 	public boolean isRoundOngoing() { return roundOngoing; }
@@ -116,13 +124,14 @@ public class RoundCoordinatorImpl
 			/* create accessible object for this round */
 			RoundCoordinatorImpl roundCoord = new RoundCoordinatorImpl();
 			Naming.rebind(bindname,roundCoord) ;
-			System.out.println("round Coordinator running");
+			System.out.println("RoundCoordinator running");
 			
 			/* Get information from GameCoordinator */
 			ArrayList<Agent> playerLocations = gameCoord.getPlayers();
 			Map<Agent,Integer> producerLocations = gameCoord.getProducers();
+			//if (playerLocations.size() < 2 ) {
 			if (playerLocations.size() == 0 ) {
-				System.err.println("No players found. Ending...");
+				System.err.println("Not enough players. Ending...");
 				Naming.unbind(bindname);
 				System.exit(1);
 			} 
@@ -141,21 +150,23 @@ public class RoundCoordinatorImpl
 			for (Integer r : resourcesSet) {
 				System.out.println("Set objective for R"+r+"(>=50): ");
 				o = reader.nextInt();
+				reader.nextLine();
 				while (o < 50) {
 					System.out.println("Not a possible number. Try again: ");
 					o = reader.nextInt();
+					reader.nextLine();
 				}
 				objectives.put(r,o);
 			}
 			
-			/*
-			Scanner reader = new Scanner(System.in);
-			System.out.println("Set the number of resources to find (>=50): ");
-			int objective = reader.nextInt();
-			while (objective < 50) {
-				System.out.println("Not a possible number. Try again: ");
-				objective = reader.nextInt();
-			*/
+			if (gameCoord.isHumanPresent()) {
+				roundCoord.setTurns(true);
+			} else {
+				System.out.println("Should the players take turns? (y/n)");
+				String text = reader.nextLine();
+				boolean answer = text.toLowerCase().matches("^[yo]");
+				roundCoord.setTurns(answer);
+			}
 			
 			System.out.println("Contacting players");
 			

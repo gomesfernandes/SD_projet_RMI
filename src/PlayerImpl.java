@@ -28,6 +28,7 @@ public class PlayerImpl
 		implements Player 
 {
 	private int objective;
+	private int personalityType;
 	private boolean observingAllowed = false; 
 	private ArrayList<Player> competitors;
 	private ArrayList<Producer> producers;
@@ -58,6 +59,9 @@ public class PlayerImpl
 		myTurn = b;
 	}
 	
+	/** @param type the personality Type */
+	public void setPeronalityType(char type) { personalityType = type; }
+	
 	/**
 	 * As long as the objective is not reached for each resource, one
 	 * must keep playing.
@@ -79,7 +83,6 @@ public class PlayerImpl
 	public void setObjective(Map<Integer,Integer> o) throws RemoteException {
 		for (Resource r: resources) {
 			r.setObjective(o.get(r.getType()));
-			System.out.println("Objective set for resource type "+r.getType());
 		}
 	}
 	
@@ -164,9 +167,7 @@ public class PlayerImpl
 			r = resources.get(nextRess);
 			nextRess = (nextRess+1)%resources.size();
 		} while (r.getLeftToFind() == 0 && isObjectiveNotReached());
-		
-		System.out.println();
-		
+
 		List<Producer> prods = r.getProducers();
 		if (observingAllowed) { //choose producer with the most copies
 			int max = 0, nbRess = prods.get(0).getNbCopies();
@@ -194,10 +195,16 @@ public class PlayerImpl
 	 * @param args		the command line options
 	 */ 
 	public static void main(String args[]) {
-		if (args.length != 3) {
+		boolean isHuman = false;
+		
+		if (args.length < 3) {
 			System.out.println("Usage : java PlayerImpl <port>" +
-								"<GameCoord Host> <GameCoord Port>") ;
+								"<GameCoord Host> <GameCoord Port> [h]") ;
 			System.exit(0) ;
+		} else if (args.length == 4 
+					&& ("h".compareTo(args[3].toLowerCase()) == 0)) {
+			isHuman = true;
+			System.out.println("This player is a human.");
 		}
 		
 		String bindname = "rmi://localhost:" + args[0] + "/Player";
@@ -209,11 +216,12 @@ public class PlayerImpl
 			/* create local producer object and bind it */
 			PlayerImpl j = new PlayerImpl(hostIP,args[0]);
 			Naming.bind(bindname,j);
-			
+
 			/* access game coordinator and notify him about us */
 			GameCoordinator gameCoord = (GameCoordinator) Naming.lookup(
 				"rmi://" + args[1] + ":" + args[2] + "/GameCoordinator");
 			gameCoord.addPlayer(hostIP,args[0]);
+			if (isHuman) gameCoord.hasHumanPlayer();
 			
 			System.out.println("Player running");
 			do {

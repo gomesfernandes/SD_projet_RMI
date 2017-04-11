@@ -13,6 +13,10 @@ import java.util.ArrayList;
  * needs in a game, such as where to find his opponents and the producers.
  */ 
 public interface Player extends Remote {
+	
+	public static final char INDIVIDUALIST = 'i';
+	public static final char COOPERATIVE = 'c';
+	
 	/**
 	 * Fixes the number of copies the player must obtain for each resource.
 	 * @param int		the number of copies to find for all resources
