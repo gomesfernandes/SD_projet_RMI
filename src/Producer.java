@@ -35,4 +35,10 @@ public interface Producer extends Remote {
 	 * @exception RemoteException exception occurred during remote call
 	 */
 	public int getResourceType() throws RemoteException ;
+	
+	/**
+	 * @return the number of available copies
+	 * @exception RemoteException exception occurred during remote call
+	 */
+	public int getNbCopies() throws RemoteException ;
 }

@@ -9,11 +9,13 @@ import java.net.* ;
 import java.rmi.* ;
 import java.net.MalformedURLException ;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Iterator;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * This class is the implementation of the remote interface Player. 
@@ -26,13 +28,14 @@ public class PlayerImpl
 		implements Player 
 {
 	private int objective;
+	private boolean observingAllowed = false; 
 	private ArrayList<Player> competitors;
 	private ArrayList<Producer> producers;
 	private ArrayList<Resource> resources;
 	private boolean myTurn = false;
 	private String host;
 	private String port;
-	private int nextProd = 0;
+	private int nextRess = 0;
 	private RoundCoordinator roundCoord;
 	
 	/**
@@ -61,17 +64,23 @@ public class PlayerImpl
 	 * @return true if the objective is not yet reached, false if it is
 	 */ 
 	public boolean isObjectiveNotReached() {
-		if (resources == null) return true;
+		if (resources == null) {
+			return true;
+		}
 		for (int i=0; i<resources.size(); i++) {
-			if (resources.get(i).getNbCopies() < objective)
+			if (resources.get(i).getLeftToFind() > 0) {
 				return true;
+			}
 		}
 		return false;
 	}
 	
 	/** {@inheritDoc} */ 
 	public void setObjective(int o) throws RemoteException {
-		objective = o;
+		for (Resource r: resources) {
+			System.out.println("Objective set for resource type "+r.getType());
+			r.setObjective(o);
+		}
 	}
 	
 	/** {@inheritDoc} */ 
@@ -146,12 +155,34 @@ public class PlayerImpl
 	 * @exception RemoteException exception occurred during remote call
 	 */ 
 	public void makeMove() throws RemoteException {
+		Producer p;
+		Resource r;
 		int copies = 0;
-		Producer p = producers.get(nextProd);
-		copies = p.takeCopies(objective);
-		int i = resources.indexOf(new Resource(p.getResourceType()));
-		resources.get(i).addCopies(copies);
-		nextProd = (nextProd+1)%producers.size();
+		
+		// cycle through resources that are not yet complete
+		do {
+			r = resources.get(nextRess);
+			nextRess = (nextRess+1)%resources.size();
+		} while (r.getLeftToFind() == 0 && isObjectiveNotReached());
+		
+		System.out.println();
+		
+		List<Producer> prods = r.getProducers();
+		if (observingAllowed) { //choose producer with the most copies
+			int max = 0, nbRess = prods.get(0).getNbCopies();
+			for (int i=1;i<prods.size();i++) {
+				if (prods.get(i).getNbCopies() > nbRess) {
+					max = i;
+					nbRess = prods.get(i).getNbCopies();
+				}
+			}
+			p = prods.get(max);
+		} else { //choose a random producer
+			int i = ThreadLocalRandom.current().nextInt(0, prods.size());
+			p = prods.get(i);
+		}
+		copies = p.takeCopies(r.getLeftToFind());
+		r.addCopies(copies);
 		System.out.println("Took "+copies+" of resource "+p.getResourceType());
 		myTurn = false;
 	}

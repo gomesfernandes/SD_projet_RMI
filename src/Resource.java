@@ -18,6 +18,7 @@ public class Resource {
 	private Integer type;
 	private List<Producer> producers = new ArrayList<Producer>();
 	private int nbCopies = 0;
+	private int objective = Integer.MAX_VALUE;
 	
 	/** @param t	the type of the resource (an integer) */
 	public Resource(int t) {
@@ -40,6 +41,20 @@ public class Resource {
 	
 	/** @return number of copies already obtained */
 	public int getNbCopies() { return nbCopies; }
+	
+	/** @param n number of copies to seek */
+	public void setObjective(int n) { objective = n; }
+	
+	/** @return number of copies we need to fulfil our objective */
+	public int getObjective() { return objective; }
+	
+	/** @return number of copies we still need to get */
+	public int getLeftToFind() { 
+		if (nbCopies >= objective)
+			return 0;
+		else
+			return objective-nbCopies; 
+	}
 	
 	/**
 	 * @param object	the object to compare to	

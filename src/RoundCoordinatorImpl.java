@@ -155,6 +155,8 @@ public class RoundCoordinatorImpl
 				objective = reader.nextInt();
 			}
 			
+			System.out.println("Contacting players");
+			
 			/* Tell players where to find competitors and resources */
 			Iterator<Agent> playerIter = playerLocations.iterator();
 			while (playerIter.hasNext()) {
@@ -162,11 +164,13 @@ public class RoundCoordinatorImpl
 				Player p = (Player) Naming.lookup("rmi://"+ 
 						a.getHost()+ ":" + a.getPort() + "/Player");
 				roundCoord.addPlayer(p);
-				p.setObjective(objective);
 				p.setPlayers(playerLocations);
 				p.setProducers(producerLocations);
 				p.setRoundCoordinator(hostIP,args[0]);
+				p.setObjective(objective);
 			}
+			
+			System.out.println("Contacting producers");
 			
 			/* Tell producers to start producing */
 			Iterator<Agent> prodIter = producerLocations.keySet().iterator();

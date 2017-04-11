@@ -49,6 +49,9 @@ public class ProducerImpl
 	}
 	
 	/** {@inheritDoc} */
+	public int getNbCopies() throws RemoteException { return nbCopies;}
+	
+	/** {@inheritDoc} */
 	public synchronized int takeCopies(int n) throws RemoteException {
 		int r;
 		if (n <= 0) {
