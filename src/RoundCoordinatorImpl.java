@@ -243,12 +243,13 @@ public class RoundCoordinatorImpl
 			System.out.println("The winner is player "+roundCoord.getWinner());
 			roundCoord.stopProduction();
 			//gameCoord.endGame();
+			//Naming.unbind(bindname) ;
 			System.exit(0);
 		} 
-		catch (RemoteException re) { System.err.println(re) ; }
-		catch (MalformedURLException e) { System.err.println(e) ; }
-		catch (NotBoundException re) { System.err.println(re) ; }
-		catch (UnknownHostException e) {}
-		catch (Exception e) {}
+		catch (RemoteException re) { System.err.println(re) ;System.exit(1); }
+		catch (MalformedURLException e) { System.err.println(e) ;System.exit(1); }
+		catch (NotBoundException re) { System.err.println(re) ;System.exit(1); }
+		catch (UnknownHostException e) {System.err.println(e) ;System.exit(1);}
+		catch (Exception e) {System.err.println(e) ;System.exit(1);}
 	}
 }

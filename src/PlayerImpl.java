@@ -165,32 +165,38 @@ public class PlayerImpl
 		Producer p;
 		Resource r;
 		int copies = 0;
-
-		// cycle through resources that are not yet complete
-		do {
-			r = resources.get(nextRess);
-			nextRess = (nextRess+1)%resources.size();
-		} while (r.getLeftToFind() == 0 && !isObjectiveReached());
 		
-		List<Producer> prods = r.getProducers();
-		if (observingAllowed) { //choose producer with the most copies
-			int max = 0, nbRess = prods.get(0).getNbCopies();
-			for (int i=1;i<prods.size();i++) {
-				if (prods.get(i).getNbCopies() > nbRess) {
-					max = i;
-					nbRess = prods.get(i).getNbCopies();
-				}
+		if (human) {
+			for (r : resources) {
+				System.out.println();
 			}
-			p = prods.get(max);
-		} else { //choose a random producer
-			int i = ThreadLocalRandom.current().nextInt(0, prods.size());
-			p = prods.get(i);
-		}
+		} else {
+			// cycle through resources that are not yet complete
+			do {
+				r = resources.get(nextRess);
+				nextRess = (nextRess+1)%resources.size();
+			} while (r.getLeftToFind() == 0 && !isObjectiveReached());
+			
+			List<Producer> prods = r.getProducers();
+			if (observingAllowed) { //choose producer with the most copies
+				int max = 0, nbRess = prods.get(0).getNbCopies();
+				for (int i=1;i<prods.size();i++) {
+					if (prods.get(i).getNbCopies() > nbRess) {
+						max = i;
+						nbRess = prods.get(i).getNbCopies();
+					}
+				}
+				p = prods.get(max);
+			} else { //choose a random producer
+				int i = ThreadLocalRandom.current().nextInt(0, prods.size());
+				p = prods.get(i);
+			}
 
-		copies = p.takeCopies(r.getLeftToFind());
-		if (copies != 0) {
-			r.addCopies(copies);
-			System.out.println("Took "+copies+" of R"+p.getResourceType());
+			copies = p.takeCopies(r.getLeftToFind());
+			if (copies != 0) {
+				r.addCopies(copies);
+				System.out.println("Took "+copies+" of R"+p.getResourceType());
+			}
 		}
 		myTurn = false;
 		if (isObjectiveReached()) roundCoord.playerFinished();
@@ -285,11 +291,11 @@ public class PlayerImpl
 			
 			System.out.println("Round finished!");
 		} 
-		catch (RemoteException re) { System.err.println(re) ; }
-		catch (AlreadyBoundException e) { System.err.println(e) ; }
-		catch (MalformedURLException e) { System.err.println(e) ; }
-		catch (NotBoundException re) { System.err.println(re) ; }
-		catch (UnknownHostException re) { System.err.println(re) ; }
+		catch (RemoteException re) {System.err.println(re);System.exit(1); }
+		catch (AlreadyBoundException e) {System.err.println(e);System.exit(1); }
+		catch (MalformedURLException e) {System.err.println(e); System.exit(1);}
+		catch (NotBoundException re) {System.err.println(re);System.exit(1);}
+		catch (UnknownHostException re) {System.err.println(re);System.exit(1);}
 		catch (Exception e) {}
 	}
 }

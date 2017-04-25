@@ -123,10 +123,10 @@ public class ProducerImpl
 					"producer on this host machine?"); 
 			System.out.println(e) ;
 		}
-		catch (RemoteException e) { System.out.println(e) ; }
-		catch (MalformedURLException e) { System.out.println(e) ; }
-		catch (NotBoundException re) { System.out.println(re) ; }
-		catch (UnknownHostException re) { System.out.println(re) ; } 
-		catch (Exception e) {System.out.println(e) ;}
+		catch (RemoteException e) {System.out.println(e);System.exit(1); }
+		catch (MalformedURLException e) {System.out.println(e);System.exit(1); }
+		catch (NotBoundException re) {System.out.println(re);System.exit(1); }
+		catch (UnknownHostException re) {System.out.println(re);System.exit(1); } 
+		catch (Exception e) {System.out.println(e);System.exit(1);}
 	}
 }
