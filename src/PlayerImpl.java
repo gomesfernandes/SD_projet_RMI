@@ -248,15 +248,28 @@ public class PlayerImpl
 	 */ 
 	public static void main(String args[]) {
 		boolean isHuman = false;
+		char personalityType = Player.COOPERATIVE;
 		
-		if (args.length < 3) {
+		if (args.length < 3 || args.length > 5) {
 			System.out.println("Usage : java PlayerImpl <port>" +
-								"<GameCoord Host> <GameCoord Port> [h]") ;
+						"<GameCoord Host> <GameCoord Port> [h] [i] ") ;
 			System.exit(0) ;
-		} else if (args.length == 4 
-					&& ("h".compareTo(args[3].toLowerCase()) == 0)) {
-			isHuman = true;
-			System.out.println("This player is a human.");
+		} else if (args.length == 4) { 
+			if ("h".compareTo(args[3].toLowerCase()) == 0) {
+				isHuman = true;
+				System.out.println("This player is a human.");
+			} else if  ("i".compareTo(args[3].toLowerCase()) == 0) {
+				personalityType = Player.INDIVIDUALIST;
+			}
+		} else if (args.length == 5) {
+			if (("h".compareTo(args[3].toLowerCase()) == 0)
+				|| ("h".compareTo(args[4].toLowerCase()) == 0) ) {
+				isHuman = true;
+				System.out.println("This player is a human.");
+			} else if  (("i".compareTo(args[3].toLowerCase()) == 0)
+				|| ("i".compareTo(args[4].toLowerCase()) == 0) ) {
+				personalityType = Player.INDIVIDUALIST;
+			}
 		}
 		
 		String bindname = "rmi://localhost:" + args[0] + "/Player";

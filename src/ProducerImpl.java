@@ -55,6 +55,7 @@ public class ProducerImpl
 	/** {@inheritDoc} */
 	public synchronized int takeCopies(int n) throws RemoteException {
 		int r;
+		if (n>maxN) n = maxN;
 		if (n <= 0) {
 			r = 0;
 		} else if (n <= nbCopies) {
