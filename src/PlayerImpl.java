@@ -29,6 +29,7 @@ public class PlayerImpl
 		implements Player 
 {
 	private int objective;
+	private int assignedID;
 	private int personalityType;
 	private boolean observingAllowed = false; 
 	private ArrayList<Player> competitors;
@@ -63,7 +64,10 @@ public class PlayerImpl
 	}
 	
 	/** @param type the personality Type */
-	public void setPeronalityType(char type) { personalityType = type; }
+	public void setPeronalityType(char type) { personalityType = type;}
+	
+	/** {@inheritDoc} */ 
+	public void setID(int id) throws RemoteException {assignedID = id;}
 	
 	/**
 	 * As long as the objective is not reached for each resource, one
@@ -217,7 +221,7 @@ public class PlayerImpl
 		}
 
 		myTurn = false;
-		if (isObjectiveReached()) roundCoord.playerFinished();
+		if (isObjectiveReached()) roundCoord.playerFinished(assignedID);
 		roundCoord.turnFinished();
 	}
 	
@@ -281,6 +285,7 @@ public class PlayerImpl
 			/* create local producer object and bind it */
 			PlayerImpl j = new PlayerImpl(hostIP,args[0]);
 			Naming.bind(bindname,j);
+			j.setPeronalityType(personalityType);
 
 			/* access game coordinator and notify him about us */
 			GameCoordinator gameCoord = (GameCoordinator) Naming.lookup(

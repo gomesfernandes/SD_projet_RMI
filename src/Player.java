@@ -32,6 +32,12 @@ public interface Player extends Remote {
 	public void setPlayers(ArrayList<Agent> j) throws RemoteException;
 	
 	/**
+	 * @param id		the player's ID
+	 * @exception RemoteException exception occurred during remote call
+	 */ 
+	public void setID(int id) throws RemoteException;
+	
+	/**
 	 * Provides the addresses of all the producers in the game, and what
 	 * they produce.
 	 * @param int		a Map of Agents (of type producers) and the type

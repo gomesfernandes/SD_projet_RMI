@@ -13,9 +13,10 @@ import java.util.Map;
  */ 
 public interface RoundCoordinator extends Remote {
 	/** Used by a player to notify that they have reached their objectives.
+	 * @param id the player's ID, as assigned by the RoundCoordinator
 	 * @exception RemoteException exception occurred during remote call
 	 */ 
-	public void playerFinished() throws RemoteException;
+	public void playerFinished(int id) throws RemoteException;
 	
 	/** @return true if the round is finished, false if not 
 	 * @exception RemoteException exception occurred during remote call

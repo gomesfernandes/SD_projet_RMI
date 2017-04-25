@@ -90,11 +90,17 @@ public class RoundCoordinatorImpl
 	public ArrayList<Producer> getProducers() {return producers;}
 
 	/** {@inheritDoc} */
-	public void playerFinished() throws RemoteException {
+	public void playerFinished(int id) throws RemoteException {
 		nbFinishedPlayers++;
-		finishedPlayers.add(currentPlayer);
-		if (nbFinishedPlayers == 1) {
-			winner = currentPlayer;
+		if (hasTurns) {
+			finishedPlayers.add(currentPlayer);
+			if (nbFinishedPlayers == 1) {
+				winner = currentPlayer;
+			}
+		} else {
+			if (nbFinishedPlayers == 1) {
+				winner = id;
+			}
 		}
 		if (nbFinishedPlayers == players.size()) {
 			roundOngoing = false;
@@ -216,6 +222,7 @@ public class RoundCoordinatorImpl
 			System.out.println("Contacting players");
 			
 			/* Tell players where to find competitors and resources */
+			int id = 0;
 			Iterator<Agent> playerIter = playerLocations.iterator();
 			while (playerIter.hasNext()) {
 				Agent a = playerIter.next();
@@ -227,6 +234,8 @@ public class RoundCoordinatorImpl
 				p.setRoundCoordinator(hostIP,args[0]);
 				p.setObjective(objectives);
 				p.setObserving(roundCoord.isObservingAllowed());
+				p.setID(id);
+				id++;
 			}
 			
 			System.out.println("Contacting producers");
@@ -256,7 +265,11 @@ public class RoundCoordinatorImpl
 					roundCoord.waitForMove();
 					next = roundCoord.nextPlayer();
 				}
-			} 
+			} else {
+				System.out.println("Round ongoing...");
+				while (roundCoord.isRoundOngoing()) {
+				}
+			}
 			
 			System.out.println("Round over");
 			System.out.println("The winner is player "+roundCoord.getWinner());
