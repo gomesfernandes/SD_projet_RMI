@@ -150,6 +150,11 @@ public class PlayerImpl
 		catch (MalformedURLException e) { System.out.println(e) ; }
 	}
 	
+	/** {@inheritDoc} */ 
+	public void setObserving(boolean b) throws RemoteException {
+		observingAllowed = b;
+	}
+	
 	/** @return the coordinator of the round
 	 */ 
 	public RoundCoordinator getRoundCoordinator() {

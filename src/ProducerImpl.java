@@ -23,6 +23,7 @@ public class ProducerImpl
 		implements Producer 
 {
 	private int nbCopies = 50;
+	private int maxN;
 	private boolean productionOngoing = false;
 	private int resourceType;
 	
@@ -68,6 +69,9 @@ public class ProducerImpl
 		}
 		return r;
 	}
+	
+	/** {@inheritDoc} */ 
+	public void setMaxTaken(int n) throws RemoteException { maxN = n;}
 	
 	/** {@inheritDoc} */
 	public void startProduction() throws RemoteException {

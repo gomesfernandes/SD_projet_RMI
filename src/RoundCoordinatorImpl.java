@@ -27,6 +27,7 @@ public class RoundCoordinatorImpl
 	private boolean roundOngoing = false;
 	private boolean hasTurns = true;
 	public boolean waitingForMove = false;
+	private boolean observingAllowed = false;
 	private int endType;
 	ArrayList<Player> players = new ArrayList<Player>();
 	ArrayList<Producer> producers = new ArrayList<Producer>();
@@ -55,6 +56,9 @@ public class RoundCoordinatorImpl
 
 	/** {@inheritDoc} */
 	public synchronized boolean isRoundOngoing() {return roundOngoing;}
+
+	public void setObserving(boolean a) { observingAllowed = a;}
+	public boolean isObservingAllowed() { return observingAllowed;}
 
 	/** Chooses who's turn it is. The first player is chosen randomly, 
 	 * then it cycles through the list of players.
@@ -187,6 +191,15 @@ public class RoundCoordinatorImpl
 				objectives.put(r,o);
 			}
 			
+			System.out.println("Set max number of copies that can be taken at once:");
+			int maxN = reader.nextInt();
+			reader.nextLine();
+			while (maxN <= 0) {
+				System.out.println("Not a possible number. Try again: ");
+				maxN = reader.nextInt();
+				reader.nextLine();
+			}
+			
 			if (gameCoord.isHumanPresent()) {
 				roundCoord.setTurns(true);
 			} else {
@@ -195,6 +208,10 @@ public class RoundCoordinatorImpl
 				boolean answer = text.toLowerCase().matches("^[yo]");
 				roundCoord.setTurns(answer);
 			}
+			
+			System.out.println("Is observing allowed? (y/n)");
+			boolean answer = reader.nextLine().toLowerCase().matches("^[yo]");
+			roundCoord.setObserving(answer);
 			
 			System.out.println("Contacting players");
 			
@@ -209,6 +226,7 @@ public class RoundCoordinatorImpl
 				p.setProducers(producerLocations);
 				p.setRoundCoordinator(hostIP,args[0]);
 				p.setObjective(objectives);
+				p.setObserving(roundCoord.isObservingAllowed());
 			}
 			
 			System.out.println("Contacting producers");
@@ -221,6 +239,7 @@ public class RoundCoordinatorImpl
 										":" + a.getPort() + "/Producer");
 				roundCoord.addProducer(p);
 				p.startProduction();
+				p.setMaxTaken(maxN);
 			}
 			
 			/* mark the start of the game */

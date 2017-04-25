@@ -53,6 +53,12 @@ public interface Player extends Remote {
 	 */ 
 	public void setRoundCoordinator(String host, String port) 
 												throws RemoteException ;
+												
+	/**
+	 * @param b	true if the players are allowed to observe others, false if not
+	 * @exception RemoteException exception occurred during remote call
+	 */ 
+	public void setObserving(boolean b) throws RemoteException;
 	
 	
 	//public int getResource(int type, int n) throws RemoteException;

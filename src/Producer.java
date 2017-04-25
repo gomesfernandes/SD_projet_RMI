@@ -31,6 +31,12 @@ public interface Producer extends Remote {
 	public int takeCopies(int n) throws RemoteException ;
 	
 	/**
+	 * @param n		maximum number of copies a player can take at once
+	 * @exception RemoteException exception occurred during remote call
+	 */ 
+	public void setMaxTaken(int n) throws RemoteException;
+	
+	/**
 	 * @return the type of resource (as an integer)
 	 * @exception RemoteException exception occurred during remote call
 	 */
