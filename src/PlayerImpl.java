@@ -16,6 +16,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.Scanner; 
 
 /**
  * This class is the implementation of the remote interface Player. 
@@ -167,37 +168,49 @@ public class PlayerImpl
 		int copies = 0;
 		
 		if (human) {
-			for (r : resources) {
-				System.out.println();
+			int chosenType;
+			System.out.println("Choose a resource:");
+			for (Resource res : resources) {
+				System.out.println("R"+res.getType()+" :"
+								+res.getLeftToFind()+" left to find");
 			}
+			Scanner reader = new Scanner(System.in);
+			do {
+				System.out.println("Enter type number:");
+				chosenType = reader.nextInt();
+				reader.nextLine();
+				r = new Resource(chosenType);
+			} while (!resources.contains(r));
+			r = resources.get(resources.indexOf(r));
 		} else {
 			// cycle through resources that are not yet complete
 			do {
 				r = resources.get(nextRess);
 				nextRess = (nextRess+1)%resources.size();
 			} while (r.getLeftToFind() == 0 && !isObjectiveReached());
-			
-			List<Producer> prods = r.getProducers();
-			if (observingAllowed) { //choose producer with the most copies
-				int max = 0, nbRess = prods.get(0).getNbCopies();
-				for (int i=1;i<prods.size();i++) {
-					if (prods.get(i).getNbCopies() > nbRess) {
-						max = i;
-						nbRess = prods.get(i).getNbCopies();
-					}
+		}	
+		
+		List<Producer> prods = r.getProducers();
+		if (observingAllowed) { //choose producer with the most copies
+			int max = 0, nbRess = prods.get(0).getNbCopies();
+			for (int i=1;i<prods.size();i++) {
+				if (prods.get(i).getNbCopies() > nbRess) {
+					max = i;
+					nbRess = prods.get(i).getNbCopies();
 				}
-				p = prods.get(max);
-			} else { //choose a random producer
-				int i = ThreadLocalRandom.current().nextInt(0, prods.size());
-				p = prods.get(i);
 			}
-
-			copies = p.takeCopies(r.getLeftToFind());
-			if (copies != 0) {
-				r.addCopies(copies);
-				System.out.println("Took "+copies+" of R"+p.getResourceType());
-			}
+			p = prods.get(max);
+		} else { //choose a random producer
+			int i = ThreadLocalRandom.current().nextInt(0, prods.size());
+			p = prods.get(i);
 		}
+
+		copies = p.takeCopies(r.getLeftToFind());
+		if (copies != 0) {
+			r.addCopies(copies);
+			System.out.println("Took "+copies+" of R"+p.getResourceType());
+		}
+
 		myTurn = false;
 		if (isObjectiveReached()) roundCoord.playerFinished();
 		roundCoord.turnFinished();
