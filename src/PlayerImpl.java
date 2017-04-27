@@ -165,6 +165,8 @@ public class PlayerImpl
 		return roundCoord;
 	}
 	
+	public void setRoundCoordinatorNull() {roundCoord=null;}
+	
 	/**
 	 * Takes as many copies as necessary to fullfil our objective. If the
 	 * player is a human, they will be asked for input.
@@ -331,40 +333,44 @@ public class PlayerImpl
 			gameCoord.addPlayer(hostIP,args[0]);
 			if (isHuman) gameCoord.hasHumanPlayer();
 			
-			System.out.println("Player running, waiting for game");
-			/* wait for RoundCoordinator */
 			do {
-				Thread.sleep(500);
-			} while (j.getRoundCoordinator() == null);
-			RoundCoordinator coord = j.getRoundCoordinator();
-			
-			/* wait for round to start */
-			do {
-				Thread.sleep(500);
-			} while (!coord.isRoundOngoing());
-			
-			System.out.println("Round started");
-
-			if (coord.isTurnsSet()) {
-				/* always wait for my turn */
+				System.out.println("Waiting for round");
+				/* wait for RoundCoordinator */
 				do {
-					j.waitForTurn();
-					if (!coord.isRoundOngoing()) break;
-					if (isHuman){
-						j.makeMove(true);
-					} else {
-						j.makeMove(false);
-					}
-				} while ((!j.isObjectiveReached()) && coord.isRoundOngoing());
-			} else {
-				/* grab ressources as soon as possible but wait a bit */
-				do {
-					j.makeMove(false);
 					Thread.sleep(500);
-				} while ((!j.isObjectiveReached()) && coord.isRoundOngoing());
-			}
-			
-			System.out.println("Round over");
+				} while (j.getRoundCoordinator() == null);
+				RoundCoordinator coord = j.getRoundCoordinator();
+				
+				/* wait for round to start */
+				do {
+					Thread.sleep(500);
+				} while (!coord.isRoundOngoing());
+				
+				System.out.println("Round started");
+
+				if (coord.isTurnsSet()) {
+					/* always wait for my turn */
+					do {
+						j.waitForTurn();
+						if (!coord.isRoundOngoing()) break;
+						if (isHuman){
+							j.makeMove(true);
+						} else {
+							j.makeMove(false);
+						}
+					} while ((!j.isObjectiveReached()) 
+								&& coord.isRoundOngoing());
+				} else {
+					/* grab ressources as soon as possible but wait a bit */
+					do {
+						j.makeMove(false);
+						Thread.sleep(500);
+					} while ((!j.isObjectiveReached()) 
+								&& coord.isRoundOngoing());
+				}
+				System.out.println("Round over");
+				j.setRoundCoordinatorNull();
+			} while(true);
 		}
 		catch (RemoteException re) {System.err.println(re);System.exit(1); }
 		catch (AlreadyBoundException e) {System.err.println(e);System.exit(1); }
