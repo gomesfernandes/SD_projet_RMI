@@ -66,6 +66,4 @@ public interface Player extends Remote {
 	 */ 
 	public void setObserving(boolean b) throws RemoteException;
 	
-	
-	//public int getResource(int type, int n) throws RemoteException;
 }

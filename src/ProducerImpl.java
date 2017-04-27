@@ -40,6 +40,7 @@ public class ProducerImpl
 	public synchronized void produce() throws RemoteException {
 		if (productionOngoing) {
 			nbCopies+=5;
+			//nbCopies = nbCopies + nbCopies/2 + 1;
 			System.out.println("5 new copies of R"+resourceType+". total:"+nbCopies);
 		}
 	}
@@ -56,7 +57,7 @@ public class ProducerImpl
 	public synchronized int takeCopies(int n) throws RemoteException {
 		int r;
 		if (n>maxN) n = maxN;
-		if (n <= 0) {
+		if (n <= 0 || nbCopies == 0) {
 			r = 0;
 		} else if (n <= nbCopies) {
 			nbCopies -= n;

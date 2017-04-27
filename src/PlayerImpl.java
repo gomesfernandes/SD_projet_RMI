@@ -264,7 +264,7 @@ public class PlayerImpl
 		roundCoord.turnFinished();
 	}
 	
-	public synchronized void waitForTurn() {
+	public synchronized void waitForTurn() throws RemoteException {
 		while(!isMyTurn()) {
 			try {
 				wait();
@@ -272,15 +272,12 @@ public class PlayerImpl
 		}
 	}
 	
-	public synchronized void waitForRound() {
-		try {
-			while(!roundCoord.isRoundOngoing()) {
-				try {
-					wait();
-				} catch (InterruptedException e) {}
-			}
+	public synchronized void waitForRound() throws RemoteException {
+		while(!roundCoord.isRoundOngoing()) {
+			try {
+				wait();
+			} catch (InterruptedException e) {}
 		}
-		catch (RemoteException re) { System.out.println(re) ; }
 	}
 
 	/**
@@ -352,22 +349,23 @@ public class PlayerImpl
 				/* always wait for my turn */
 				do {
 					j.waitForTurn();
+					if (!coord.isRoundOngoing()) break;
 					if (isHuman){
 						j.makeMove(true);
 					} else {
 						j.makeMove(false);
 					}
-				} while (!j.isObjectiveReached());
+				} while ((!j.isObjectiveReached()) && coord.isRoundOngoing());
 			} else {
 				/* grab ressources as soon as possible but wait a bit */
 				do {
 					j.makeMove(false);
 					Thread.sleep(500);
-				} while (!j.isObjectiveReached());
+				} while ((!j.isObjectiveReached()) && coord.isRoundOngoing());
 			}
 			
-			System.out.println("Round finished!");
-		} 
+			System.out.println("Round over");
+		}
 		catch (RemoteException re) {System.err.println(re);System.exit(1); }
 		catch (AlreadyBoundException e) {System.err.println(e);System.exit(1); }
 		catch (MalformedURLException e) {System.err.println(e); System.exit(1);}

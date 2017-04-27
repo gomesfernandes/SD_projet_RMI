@@ -28,6 +28,7 @@ public class RoundCoordinatorImpl
 	private boolean hasTurns = true;
 	public boolean waitingForMove = false;
 	private boolean observingAllowed = false;
+	private boolean waitForAll = false;
 	private int endType;
 	ArrayList<Player> players = new ArrayList<Player>();
 	ArrayList<Producer> producers = new ArrayList<Producer>();
@@ -59,6 +60,7 @@ public class RoundCoordinatorImpl
 
 	public void setObserving(boolean a) { observingAllowed = a;}
 	public boolean isObservingAllowed() { return observingAllowed;}
+	public void setWaitForAllPlayers(boolean a) {waitForAll = a;}
 
 	/** Chooses who's turn it is. The first player is chosen randomly, 
 	 * then it cycles through the list of players.
@@ -92,19 +94,27 @@ public class RoundCoordinatorImpl
 	/** {@inheritDoc} */
 	public void playerFinished(int id) throws RemoteException {
 		nbFinishedPlayers++;
+		if (nbFinishedPlayers == 1) {
+			winner = id;
+			if (!waitForAll) {
+				roundOngoing = false;
+				if (hasTurns) notifyEndToPlayers();
+			}
+		}
 		if (hasTurns) {
 			finishedPlayers.add(currentPlayer);
 			if (nbFinishedPlayers == 1) {
 				winner = currentPlayer;
 			}
-		} else {
-			if (nbFinishedPlayers == 1) {
-				winner = id;
-			}
 		}
 		if (nbFinishedPlayers == players.size()) {
 			roundOngoing = false;
 		}
+	}
+	
+	public void notifyEndToPlayers() throws RemoteException {
+		for (Player p : players)
+			p.setMyTurn(true);
 	}
 	
 	/** {@inheritDoc} */
@@ -218,6 +228,10 @@ public class RoundCoordinatorImpl
 			System.out.println("Is observing allowed? (y/n)");
 			boolean answer = reader.nextLine().toLowerCase().matches("^[yo]");
 			roundCoord.setObserving(answer);
+			
+			System.out.println("Wait for all players to finish? (y/n)");
+			answer = reader.nextLine().toLowerCase().matches("^[yo]");
+			roundCoord.setWaitForAllPlayers(answer);
 			
 			System.out.println("Contacting players");
 			
