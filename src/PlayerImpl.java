@@ -165,7 +165,20 @@ public class PlayerImpl
 		return roundCoord;
 	}
 	
-	public void setRoundCoordinatorNull() {roundCoord=null;}
+	/** Make the necessary preparations in case there is another round */
+	public void prepareForNextRound() {
+		roundCoord=null;
+		personalityType = Player.COOPERATIVE;
+		observingAllowed = false;
+		competitors = null;
+		producers = null;
+		resources = null;
+		roundStarted = false;
+		myTurn = false;
+		host = null;
+		port = null;
+		nextRess = 0;
+	}
 	
 	/**
 	 * Takes as many copies as necessary to fullfil our objective. If the
@@ -369,7 +382,7 @@ public class PlayerImpl
 								&& coord.isRoundOngoing());
 				}
 				System.out.println("Round over");
-				j.setRoundCoordinatorNull();
+				j.prepareForNextRound();
 			} while(true);
 		}
 		catch (RemoteException re) {System.err.println(re);System.exit(1); }
