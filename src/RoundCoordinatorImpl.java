@@ -94,21 +94,22 @@ public class RoundCoordinatorImpl
 	/** {@inheritDoc} */
 	public void playerFinished(int id) throws RemoteException {
 		nbFinishedPlayers++;
-		if (nbFinishedPlayers == 1) {
+		if (!waitForAll) { /* first player to finish ends it all */
 			winner = id;
-			if (!waitForAll) {
-				roundOngoing = false;
-				if (hasTurns) notifyEndToPlayers();
-			}
-		}
-		if (hasTurns) {
-			finishedPlayers.add(currentPlayer);
-			if (nbFinishedPlayers == 1) {
-				winner = currentPlayer;
-			}
-		}
-		if (nbFinishedPlayers == players.size()) {
 			roundOngoing = false;
+			if (hasTurns) notifyEndToPlayers();
+			players.get(id).setRank(1);
+		} else {
+			players.get(id).setRank(nbFinishedPlayers);
+			if (hasTurns) {
+				finishedPlayers.add(currentPlayer);
+				if (nbFinishedPlayers == 1) {
+					winner = currentPlayer;
+				}
+			}
+			if (nbFinishedPlayers == players.size()) {
+				roundOngoing = false;
+			}
 		}
 	}
 	

@@ -66,4 +66,10 @@ public interface Player extends Remote {
 	 */ 
 	public void setObserving(boolean b) throws RemoteException;
 	
+	/**
+	 * @param r		the player's rank at the end of a round
+	 * @exception RemoteException exception occurred during remote call
+	 */ 
+	public void setRank(int r) throws RemoteException;
+	
 }

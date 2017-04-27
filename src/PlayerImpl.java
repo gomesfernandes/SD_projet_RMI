@@ -31,6 +31,7 @@ public class PlayerImpl
 	private int objective;
 	private int assignedID;
 	private int personalityType;
+	private int rank = 0;
 	private boolean observingAllowed = false; 
 	private ArrayList<Player> competitors;
 	private ArrayList<Producer> producers;
@@ -178,6 +179,7 @@ public class PlayerImpl
 		host = null;
 		port = null;
 		nextRess = 0;
+		rank = 0;
 	}
 	
 	/**
@@ -294,6 +296,9 @@ public class PlayerImpl
 			} catch (InterruptedException e) {}
 		}
 	}
+	
+	public void setRank(int r) throws RemoteException { rank = r; }
+	public int getRank() { return rank; }
 
 	/**
 	 * Launches a player that connects to the GameCoordinator, then waits
@@ -373,6 +378,8 @@ public class PlayerImpl
 						}
 					} while ((!j.isObjectiveReached()) 
 								&& coord.isRoundOngoing());
+					if (j.getRank() != 0)
+						System.out.println("I'm rank "+j.getRank());
 				} else {
 					/* grab ressources as soon as possible but wait a bit */
 					do {
@@ -380,6 +387,8 @@ public class PlayerImpl
 						Thread.sleep(500);
 					} while ((!j.isObjectiveReached()) 
 								&& coord.isRoundOngoing());
+					if (j.getRank() == 1)
+						System.out.println("I won!");
 				}
 				System.out.println("Round over");
 				j.prepareForNextRound();
