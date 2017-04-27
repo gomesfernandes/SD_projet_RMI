@@ -172,54 +172,93 @@ public class PlayerImpl
 	 * @exception RemoteException exception occurred during remote call
 	 */ 
 	public void makeMove(boolean human) throws RemoteException {
-		Producer p;
-		Resource r;
+		Producer p = null;
+		Resource r = null;
 		int copies = 0;
 		
+		/* decide on resource */
 		if (human) {
-			int chosenType;
-			System.out.println("Choose a resource:");
-			for (Resource res : resources) {
-				System.out.println("R"+res.getType()+" :"
-								+res.getLeftToFind()+" left to find");
+			if (resources.size() > 1) {
+				int chosenType;
+				System.out.println("Choose a resource:");
+				for (Resource res : resources) {
+					System.out.println("R"+res.getType()+" :"
+									+res.getLeftToFind()+" left to find");
+				}
+				Scanner reader = new Scanner(System.in);
+				do {
+					System.out.println("Enter a valid type number:");
+					chosenType = reader.nextInt();
+					reader.nextLine();
+					r = new Resource(chosenType);
+				} while (!resources.contains(r));
+				r = resources.get(resources.indexOf(r));
+			} else {
+				r = resources.get(0);
 			}
-			Scanner reader = new Scanner(System.in);
-			do {
-				System.out.println("Enter type number:");
-				chosenType = reader.nextInt();
-				reader.nextLine();
-				r = new Resource(chosenType);
-			} while (!resources.contains(r));
-			r = resources.get(resources.indexOf(r));
 		} else {
-			// cycle through resources that are not yet complete
-			do {
+			/* COOPERATIVE = cycle through resources */
+			/* INDIVIDUALIST = complete one resource at a time */
+			if (personalityType == Player.COOPERATIVE) {
+				do {
+					r = resources.get(nextRess);
+					nextRess = (nextRess+1)%resources.size();
+				} while (r.getLeftToFind() == 0 && !isObjectiveReached());
+			} else {
 				r = resources.get(nextRess);
-				nextRess = (nextRess+1)%resources.size();
-			} while (r.getLeftToFind() == 0 && !isObjectiveReached());
+				if (!isObjectiveReached() && r.getLeftToFind() == 0) {
+					nextRess++;
+					r = resources.get(nextRess);
+				}
+			}
 		}	
 		
+		/* decide on producer */
 		List<Producer> prods = r.getProducers();
-		if (observingAllowed) { //choose producer with the most copies
-			int max = 0, nbRess = prods.get(0).getNbCopies();
-			for (int i=1;i<prods.size();i++) {
-				if (prods.get(i).getNbCopies() > nbRess) {
-					max = i;
-					nbRess = prods.get(i).getNbCopies();
+		if (observingAllowed) {
+			int max = 0;
+			if (human) {
+				if (prods.size() == 1) {
+					System.out.println("(Only one producer for this resource)");
+				} else {
+					System.out.println("Choose a producer:");
+					for (int i=0;i<prods.size();i++) {
+						System.out.println("P"+i+" : "
+										+prods.get(i).getNbCopies()
+										+" copies available");
+					}
+					Scanner reader = new Scanner(System.in);
+					do {
+						System.out.println("Enter a valid producer number:");
+						max = reader.nextInt();
+						reader.nextLine();
+					} while (!(max<prods.size()) && max>=0);
+				}
+			} else {
+				/* choose producer with the most copies */
+				int nbRess = prods.get(0).getNbCopies();
+				for (int i=1;i<prods.size();i++) {
+					if (prods.get(i).getNbCopies() > nbRess) {
+						max = i;
+						nbRess = prods.get(i).getNbCopies();
+					}
 				}
 			}
 			p = prods.get(max);
-		} else { //choose a random producer
+		} else { 
+			/* choose a random producer */
 			int i = ThreadLocalRandom.current().nextInt(0, prods.size());
 			p = prods.get(i);
 		}
 
+		/* take copies */
 		copies = p.takeCopies(r.getLeftToFind());
 		if (copies != 0) {
 			r.addCopies(copies);
 			System.out.println("Took "+copies+" of R"+p.getResourceType());
 		}
 
+		/* check if finished and notify roundCoord */
 		myTurn = false;
 		if (isObjectiveReached()) roundCoord.playerFinished(assignedID);
 		roundCoord.turnFinished();
@@ -254,6 +293,8 @@ public class PlayerImpl
 		boolean isHuman = false;
 		char personalityType = Player.COOPERATIVE;
 		
+		
+		/* parse arguments */
 		if (args.length < 3 || args.length > 5) {
 			System.out.println("Usage : java PlayerImpl <port>" +
 						"<GameCoord Host> <GameCoord Port> [h] [i] ") ;
