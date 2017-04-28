@@ -33,17 +33,6 @@ public class ProducerImpl
 	public ProducerImpl(int rtype) throws RemoteException {
 			resourceType = rtype;
 	}
-
-	/** 
-	 * Produce 5 new copies of the resource.
-	 */ 
-	public synchronized void produce() throws RemoteException {
-		if (productionOngoing) {
-			nbCopies+=5;
-			//nbCopies = nbCopies + nbCopies/2 + 1;
-			System.out.println("5 new copies of R"+resourceType+". total:"+nbCopies);
-		}
-	}
 	
 	/** {@inheritDoc} */
 	public int getResourceType() throws RemoteException {
@@ -84,6 +73,17 @@ public class ProducerImpl
 	public void stopProduction() throws RemoteException {
 		productionOngoing = false;
 		System.out.println("Production of R"+resourceType+" stopped");
+	}
+
+	/** 
+	 * Produce 5 new copies of the resource.
+	 */ 
+	public synchronized void produce() throws RemoteException {
+		if (productionOngoing) {
+			nbCopies+=5;
+			//nbCopies = nbCopies + nbCopies/2 + 1;
+			System.out.println("5 new copies of R"+resourceType+". total:"+nbCopies);
+		}
 	}
 
 	/**

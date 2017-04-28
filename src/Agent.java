@@ -32,14 +32,10 @@ public class Agent implements Serializable {
 		type = t;
 	}
 	
-	/**
-	 * @return	host address of the agent
-	 */ 
+	/** @return	host address of the agent */ 
 	public String getHost() { return host; }
 	
-	/**
-	 * @return	port address of the agent as a String
-	 */ 
+	/** @return	port address of the agent as a String */ 
 	public String getPort() { return port; }
 	
 	/**

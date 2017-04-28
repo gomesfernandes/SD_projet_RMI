@@ -17,6 +17,7 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Scanner; 
+import java.util.Calendar;
 
 /**
  * This class is the implementation of the remote interface Player. 
@@ -40,10 +41,14 @@ public class PlayerImpl
 	private boolean myTurn = false;
 	private String host;
 	private String port;
-	private int nextRess = 0;
 	private RoundCoordinator roundCoord = null;
+	private int nextRess = 0;
+	private long dateStartRound;
+	private long roundTime = 0;
 	
 	/**
+	 * We need to keep the player's location so we can distinguish him
+	 * from another player.
 	 * @param h		the host address of the player's machine
 	 * @param p		the player's port
 	 * @exception RemoteException exception occurred during remote call
@@ -53,39 +58,15 @@ public class PlayerImpl
 		port = p;
 	}
 	
-	/**
-	 * @return true if it's the player's turn, false if not
-	 */ 
-	public boolean isMyTurn() { return myTurn; }
-	
 	/** {@inheritDoc} */ 
 	public synchronized void setMyTurn(boolean b) throws RemoteException {
 		myTurn = b;
 		notify();
 	}
 	
-	/** @param type the personality Type */
-	public void setPeronalityType(char type) { personalityType = type;}
-	
 	/** {@inheritDoc} */ 
 	public void setID(int id) throws RemoteException {assignedID = id;}
 	
-	/**
-	 * As long as the objective is not reached for each resource, one
-	 * must keep playing.
-	 * @return true if the objective is yet reached, false if not
-	 */ 
-	public boolean isObjectiveReached() {
-		if (resources == null) {
-			return false;
-		}
-		for (int i=0; i<resources.size(); i++) {
-			if (resources.get(i).getLeftToFind() > 0) {
-				return false;
-			}
-		}
-		return true;
-	}
 	
 	/** {@inheritDoc} */ 
 	public void setObjective(Map<Integer,Integer> o) throws RemoteException {
@@ -160,8 +141,48 @@ public class PlayerImpl
 		observingAllowed = b;
 	}
 	
-	/** @return the coordinator of the round
+	/** {@inheritDoc} */ 
+	public void setRank(int r) throws RemoteException { rank = r; }
+	
+	/** @return the player's rank after the round, -1 if no round yet played */
+	public int getRank() { return rank; }
+	
+	/** @return true if it's the player's turn, false if not */ 
+	public boolean isMyTurn() { return myTurn; }
+	
+	/** @param type the personality Type */
+	public void setPeronalityType(char type) { personalityType = type;}
+	
+	/** Remember the starting time of the round in milliseconds */
+	public void setDateStartRound() { 
+		dateStartRound = System.currentTimeMillis();
+	}
+	/** The elapsed time is the difference between now and the starting 
+	 * time, divided by 1000 to get a result in seconds. */
+	public void calulateElapsedTime() {
+		roundTime = (System.currentTimeMillis() - dateStartRound)/1000 ;
+	}
+	/** @return the time it took to finish this round */
+	public long getRoundTime() { return roundTime; }
+	
+	/**
+	 * As long as the objective is not reached for each resource, one
+	 * can keep playing.
+	 * @return true if the objective is yet reached, false if not
 	 */ 
+	public boolean isObjectiveReached() {
+		if (resources == null) {
+			return false;
+		}
+		for (int i=0; i<resources.size(); i++) {
+			if (resources.get(i).getLeftToFind() > 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/** @return the coordinator of the round */ 
 	public RoundCoordinator getRoundCoordinator() {
 		return roundCoord;
 	}
@@ -281,6 +302,8 @@ public class PlayerImpl
 		roundCoord.turnFinished();
 	}
 	
+	/** If players take turns, they must wait for the RoundCoordinator
+	 * to set the "isMyTurn" variable to true and notify them */
 	public synchronized void waitForTurn() throws RemoteException {
 		while(!isMyTurn()) {
 			try {
@@ -289,6 +312,8 @@ public class PlayerImpl
 		}
 	}
 	
+	/** We found the RoundCoordinator, but the round has not yet started,
+	 * and the coordiantor must notify of the start */
 	public synchronized void waitForRound() throws RemoteException {
 		while(!roundCoord.isRoundOngoing()) {
 			try {
@@ -296,9 +321,6 @@ public class PlayerImpl
 			} catch (InterruptedException e) {}
 		}
 	}
-	
-	public void setRank(int r) throws RemoteException { rank = r; }
-	public int getRank() { return rank; }
 
 	/**
 	 * Launches a player that connects to the GameCoordinator, then waits
@@ -365,7 +387,7 @@ public class PlayerImpl
 				} while (!coord.isRoundOngoing());
 				
 				System.out.println("Round started");
-
+				j.setDateStartRound();
 				if (coord.isTurnsSet()) {
 					/* always wait for my turn */
 					do {
@@ -390,6 +412,7 @@ public class PlayerImpl
 					if (j.getRank() == 1)
 						System.out.println("I won!");
 				}
+				j.calulateElapsedTime();
 				System.out.println("Round over");
 				j.prepareForNextRound();
 			} while(true);

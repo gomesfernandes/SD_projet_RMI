@@ -29,7 +29,6 @@ public class RoundCoordinatorImpl
 	public boolean waitingForMove = false;
 	private boolean observingAllowed = false;
 	private boolean waitForAll = false;
-	private int endType;
 	ArrayList<Player> players = new ArrayList<Player>();
 	ArrayList<Producer> producers = new ArrayList<Producer>();
 	ArrayList<Integer> finishedPlayers = new ArrayList<Integer>();
@@ -39,30 +38,64 @@ public class RoundCoordinatorImpl
 	
 	public RoundCoordinatorImpl() throws RemoteException {}
 	
+	/** {@inheritDoc} */
+	public synchronized boolean isTurnsSet() { return hasTurns; }
+	
+	/** {@inheritDoc} */
+	public synchronized boolean isRoundOngoing() {return roundOngoing;}
+	
+	/** {@inheritDoc} */
+	public void playerFinished(int id) throws RemoteException {
+		nbFinishedPlayers++;
+		if (!waitForAll) { /* first player to finish ends it all */
+			winner = id;
+			roundOngoing = false;
+			if (hasTurns) notifyEndToPlayers();
+			players.get(id).setRank(1);
+		} else {
+			players.get(id).setRank(nbFinishedPlayers);
+			if (hasTurns) {
+				finishedPlayers.add(currentPlayer);
+				if (nbFinishedPlayers == 1) {
+					winner = currentPlayer;
+				}
+			}
+			if (nbFinishedPlayers == players.size()) {
+				roundOngoing = false;
+			}
+		}
+	}
+	
+	/** {@inheritDoc} */
+	public synchronized void turnFinished() throws RemoteException {
+		waitingForMove = false;
+		notify();
+	}
+	
 	/** @param b  true if the players should take turns, false otherwise */ 
 	public void setTurns(boolean b) { 
 		hasTurns = b; 
 		if (b) System.out.println("Players will take turns");
 		else System.out.println("Players do not take turns");
 	}
-	
-	/** {@inheritDoc} */
-	public synchronized boolean isTurnsSet() { return hasTurns; }
 
-	/** Mark the start of the actual game play */
+	/** Mark the start of the actual game play and notify players */
 	public synchronized void setRoundOngoing() {
 		roundOngoing = true;
 		notify();
 	}
-
-	/** {@inheritDoc} */
-	public synchronized boolean isRoundOngoing() {return roundOngoing;}
-
+	
+	/** @param a true if observing is allowed, false if not */
 	public void setObserving(boolean a) { observingAllowed = a;}
+	
+	/** @return true if observing is allowed, false if not */
 	public boolean isObservingAllowed() { return observingAllowed;}
+	
+	/** @param a true if we wait for all players to reach their objectives,
+	 * false if not */
 	public void setWaitForAllPlayers(boolean a) {waitForAll = a;}
 
-	/** Chooses who's turn it is. The first player is chosen randomly, 
+	/** Choose who's turn it is. The first player is chosen randomly, 
 	 * then it cycles through the list of players.
 	 * @return the index of the next player
 	 */
@@ -89,41 +122,16 @@ public class RoundCoordinatorImpl
 	}
 	
 	/** @return the list of producers  */
-	public ArrayList<Producer> getProducers() {return producers;}
-
-	/** {@inheritDoc} */
-	public void playerFinished(int id) throws RemoteException {
-		nbFinishedPlayers++;
-		if (!waitForAll) { /* first player to finish ends it all */
-			winner = id;
-			roundOngoing = false;
-			if (hasTurns) notifyEndToPlayers();
-			players.get(id).setRank(1);
-		} else {
-			players.get(id).setRank(nbFinishedPlayers);
-			if (hasTurns) {
-				finishedPlayers.add(currentPlayer);
-				if (nbFinishedPlayers == 1) {
-					winner = currentPlayer;
-				}
-			}
-			if (nbFinishedPlayers == players.size()) {
-				roundOngoing = false;
-			}
-		}
-	}
+	//public ArrayList<Producer> getProducers() {return producers;}
 	
+	/** If the round finished after the first player reached his 
+	 * objective, notify players that the round if over.  */
 	public void notifyEndToPlayers() throws RemoteException {
 		for (Player p : players)
 			p.setMyTurn(true);
 	}
 	
-	/** {@inheritDoc} */
-	public synchronized void turnFinished() throws RemoteException {
-		waitingForMove = false;
-		notify();
-	}
-	
+	/** If players take turns, wait for a player to have taken their turn */
 	public synchronized void waitForMove() {
 		if (finishedPlayers.contains(currentPlayer)) {
 			waitingForMove = false;
@@ -135,7 +143,6 @@ public class RoundCoordinatorImpl
 			}
 		}
 	}
-	
 	
 	/** @return index of the first player to finish the round */
 	public int getWinner() { return winner; }
@@ -190,7 +197,7 @@ public class RoundCoordinatorImpl
 				System.exit(1);
 			} 
 			
-			/* ask for paramterers */
+			/* ask for objective */
 			Set<Integer> resourcesSet = new HashSet<Integer>();
 			resourcesSet.addAll(producerLocations.values());
 			Scanner reader = new Scanner(System.in);
@@ -208,6 +215,7 @@ public class RoundCoordinatorImpl
 				objectives.put(r,o);
 			}
 			
+			/* ask for max number of copies one can take */
 			System.out.println("Set max number of copies that can be taken at once:");
 			int maxN = reader.nextInt();
 			reader.nextLine();
@@ -217,6 +225,7 @@ public class RoundCoordinatorImpl
 				reader.nextLine();
 			}
 			
+			/* ask if there should be turns */
 			if (gameCoord.isHumanPresent()) {
 				roundCoord.setTurns(true);
 			} else {
@@ -226,10 +235,12 @@ public class RoundCoordinatorImpl
 				roundCoord.setTurns(answer);
 			}
 			
+			/* ask if players can observe other agents */
 			System.out.println("Is observing allowed? (y/n)");
 			boolean answer = reader.nextLine().toLowerCase().matches("^[yo]");
 			roundCoord.setObserving(answer);
 			
+			/* ask how the round should finish */
 			System.out.println("Wait for all players to finish? (y/n)");
 			answer = reader.nextLine().toLowerCase().matches("^[yo]");
 			roundCoord.setWaitForAllPlayers(answer);
@@ -289,7 +300,6 @@ public class RoundCoordinatorImpl
 			System.out.println("Round over");
 			System.out.println("The winner is player "+roundCoord.getWinner());
 			roundCoord.stopProduction();
-			//gameCoord.endGame();
 			//Naming.unbind(bindname) ;
 			System.exit(0);
 		} 
