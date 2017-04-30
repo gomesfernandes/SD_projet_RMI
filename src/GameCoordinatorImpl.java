@@ -26,6 +26,7 @@ public class GameCoordinatorImpl
 	private boolean humanPlayer = false;
 	private ArrayList<Agent> competitors = new ArrayList<Agent>();
 	private Map<Agent,Integer> producers = new HashMap<Agent,Integer>();
+	private ArrayList<Long> roundTimes = new ArrayList<Long>();
 	
 	public GameCoordinatorImpl() throws RemoteException {}
 	
@@ -74,6 +75,24 @@ public class GameCoordinatorImpl
 	/** {@inheritDoc} */ 
 	public Map<Agent,Integer> getProducers() throws RemoteException {
 		return producers;
+	}
+	
+	/** {@inheritDoc} */ 
+	public void addRoundTime(long duration) throws RemoteException {
+		roundTimes.add(duration);
+		System.out.println("New average round time: "+getAvgRoundTime());
+	}
+	
+	/** @return the average time it takes to finish a round */
+	private long getAvgRoundTime() throws RemoteException {
+		if (roundTimes.size() == 0) 
+			return 0;
+		else {
+			Long sum = 0l;
+			for (Long l : roundTimes)
+				sum+=l;
+			return sum/roundTimes.size();
+		}
 	}
 	
 	/**

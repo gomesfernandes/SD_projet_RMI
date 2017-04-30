@@ -72,6 +72,7 @@ public class ProducerImpl
 	/** {@inheritDoc} */
 	public void stopProduction() throws RemoteException {
 		productionOngoing = false;
+		nbCopies = 50;
 		System.out.println("Production of R"+resourceType+" stopped");
 	}
 

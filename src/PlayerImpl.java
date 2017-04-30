@@ -43,8 +43,6 @@ public class PlayerImpl
 	private String port;
 	private RoundCoordinator roundCoord = null;
 	private int nextRess = 0;
-	private long dateStartRound;
-	private long roundTime = 0;
 	
 	/**
 	 * We need to keep the player's location so we can distinguish him
@@ -153,18 +151,6 @@ public class PlayerImpl
 	/** @param type the personality Type */
 	public void setPeronalityType(char type) { personalityType = type;}
 	
-	/** Remember the starting time of the round in milliseconds */
-	public void setDateStartRound() { 
-		dateStartRound = System.currentTimeMillis();
-	}
-	/** The elapsed time is the difference between now and the starting 
-	 * time, divided by 1000 to get a result in seconds. */
-	public void calulateElapsedTime() {
-		roundTime = (System.currentTimeMillis() - dateStartRound)/1000 ;
-	}
-	/** @return the time it took to finish this round */
-	public long getRoundTime() { return roundTime; }
-	
 	/**
 	 * As long as the objective is not reached for each resource, one
 	 * can keep playing.
@@ -256,9 +242,9 @@ public class PlayerImpl
 		if (observingAllowed) {
 			int max = 0;
 			if (human) {
-				if (prods.size() == 1) {
-					System.out.println("(Only one producer for this resource)");
-				} else {
+				//if (prods.size() == 1) {
+				//	System.out.println("(Only one producer for this resource)");
+				//} else {
 					System.out.println("Choose a producer:");
 					for (int i=0;i<prods.size();i++) {
 						System.out.println("P"+i+" : "
@@ -271,7 +257,7 @@ public class PlayerImpl
 						max = reader.nextInt();
 						reader.nextLine();
 					} while (!(max<prods.size()) && max>=0);
-				}
+				//}
 			} else {
 				/* choose producer with the most copies */
 				int nbRess = prods.get(0).getNbCopies();
@@ -284,10 +270,26 @@ public class PlayerImpl
 			}
 			p = prods.get(max);
 		} else { 
-			/* choose a random producer */
-			int i = ThreadLocalRandom.current().nextInt(0, prods.size());
-			p = prods.get(i);
+			if (human) {
+				int i=0;
+				Scanner reader = new Scanner(System.in);
+				//if (prods.size() == 1) {
+				//	System.out.println("(Only one producer for this resource)");
+				//} else {
+					do {
+						System.out.println("Enter a valid producer number:");
+						i = reader.nextInt();
+						reader.nextLine();
+					} while (!(i<prods.size()) && i>=0);
+				//}
+				p = prods.get(i);
+			} else {
+				/* choose a random producer */
+				int i = ThreadLocalRandom.current().nextInt(0, prods.size());
+				p = prods.get(i);
+			}
 		}
+
 
 		/* take copies */
 		copies = p.takeCopies(r.getLeftToFind());
@@ -387,7 +389,6 @@ public class PlayerImpl
 				} while (!coord.isRoundOngoing());
 				
 				System.out.println("Round started");
-				j.setDateStartRound();
 				if (coord.isTurnsSet()) {
 					/* always wait for my turn */
 					do {
@@ -412,8 +413,6 @@ public class PlayerImpl
 					if (j.getRank() == 1)
 						System.out.println("I won!");
 				}
-				j.calulateElapsedTime();
-				System.out.println("Round over");
 				j.prepareForNextRound();
 			} while(true);
 		}

@@ -73,4 +73,10 @@ public interface GameCoordinator extends Remote {
 	 * @exception RemoteException exception occurred during remote call
 	 */
 	public Map<Agent,Integer> getProducers() throws RemoteException;
+	
+	/**
+	 * @param duration	the time it took to finish one round
+	 * @exception RemoteException exception occurred during remote call
+	 */
+	public void addRoundTime(long duration) throws RemoteException;
 }

@@ -26,7 +26,7 @@ public class RoundCoordinatorImpl
 	
 	private boolean roundOngoing = false;
 	private boolean hasTurns = true;
-	public boolean waitingForMove = false;
+	private boolean waitingForMove = false;
 	private boolean observingAllowed = false;
 	private boolean waitForAll = false;
 	ArrayList<Player> players = new ArrayList<Player>();
@@ -35,6 +35,8 @@ public class RoundCoordinatorImpl
 	private int nbFinishedPlayers = 0;
 	private int currentPlayer = -1;
 	private int winner = -1;
+	private long dateStartRound;
+	private long roundTime = 0;
 	
 	public RoundCoordinatorImpl() throws RemoteException {}
 	
@@ -156,6 +158,18 @@ public class RoundCoordinatorImpl
 			producers.get(i).stopProduction();
 		}
 	}
+	
+	/** Remember the starting time of the round in milliseconds */
+	public void setDateStartRound() { 
+		dateStartRound = System.currentTimeMillis();
+	}
+	/** The elapsed time is the difference between now and the starting 
+	 * time, divided by 1000 to get a result in seconds. */
+	public void calulateElapsedTime() {
+		roundTime = (System.currentTimeMillis() - dateStartRound)/1000 ;
+	}
+	/** @return the time it took to finish this round */
+	public long getRoundTime() { return roundTime; }
 	
 	/**
 	 * Starts a new round of the game. Through the GameCoordinator,
@@ -279,6 +293,7 @@ public class RoundCoordinatorImpl
 			
 			/* mark the start of the game */
 			roundCoord.setRoundOngoing();
+			roundCoord.setDateStartRound();
 			
 			/* if players take turns, coordonate them */
 			if (roundCoord.isTurnsSet()) {
@@ -296,11 +311,12 @@ public class RoundCoordinatorImpl
 				while (roundCoord.isRoundOngoing()) {
 				}
 			}
-			
-			System.out.println("Round over");
+			roundCoord.calulateElapsedTime();
+			System.out.println("Round over after "+roundCoord.getRoundTime()+"s");
 			System.out.println("The winner is player "+roundCoord.getWinner());
 			roundCoord.stopProduction();
-			//Naming.unbind(bindname) ;
+			gameCoord.addRoundTime(roundCoord.getRoundTime());
+			Naming.unbind(bindname) ;
 			System.exit(0);
 		} 
 		catch (RemoteException re) { System.err.println(re) ;System.exit(1); }
