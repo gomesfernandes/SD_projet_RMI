@@ -42,12 +42,30 @@ public interface GameCoordinator extends Remote {
 												throws RemoteException;
 	
 	/**
-	 * Adds a new player to the corresponding list of agents.
+	 * Removes a producer.
 	 * @param host		the producer's host address
 	 * @param port		the producer's port address
 	 * @exception RemoteException exception occurred during remote call
 	 */ 
+	public void removeProducer(String host,String port) 
+												throws RemoteException;
+	
+	/**
+	 * Adds a new player to the corresponding list of agents.
+	 * @param host		the player's host address
+	 * @param port		the player's port address
+	 * @exception RemoteException exception occurred during remote call
+	 */ 
 	public void addPlayer(String host,String port) throws RemoteException;
+	
+	/**
+	 * Removes a player.
+	 * @param host		the player's host address
+	 * @param port		the player's port address
+	 * @exception RemoteException exception occurred during remote call
+	 */ 
+	public void removePlayer(String host,String port) 
+												throws RemoteException;
 	
 	/**
 	 * @return the number of players in the game

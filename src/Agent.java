@@ -47,8 +47,8 @@ public class Agent implements Serializable {
         boolean same = false;
         if (object != null && object instanceof Agent) {
 			Agent a = (Agent) object;
-            if (this.host == a.host 
-					&& this.port == a.port
+            if (this.host.equals(a.host) 
+					&& this.port.equals(a.port)
 					&& this.type == a.type)
 				same = true;
         }

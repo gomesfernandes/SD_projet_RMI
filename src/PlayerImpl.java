@@ -375,6 +375,15 @@ public class PlayerImpl
 			gameCoord.addPlayer(hostIP,args[0]);
 			if (isHuman) gameCoord.hasHumanPlayer();
 			
+			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+				public void run() {
+					try {
+						Naming.unbind(bindname);
+						gameCoord.removePlayer(hostIP,args[0]);
+					} catch (Exception e) {}
+				}
+			}));
+			
 			do {
 				System.out.println("Waiting for round");
 				/* wait for RoundCoordinator */
@@ -417,7 +426,12 @@ public class PlayerImpl
 			} while(true);
 		}
 		catch (RemoteException re) {System.err.println(re);System.exit(1); }
-		catch (AlreadyBoundException e) {System.err.println(e);System.exit(1); }
+		catch (AlreadyBoundException e) {
+			System.out.println("Is this port already used by another "+
+					"player on this host machine?"); 
+			System.out.println(e) ;
+			System.exit(1);
+		}
 		catch (MalformedURLException e) {System.err.println(e); System.exit(1);}
 		catch (NotBoundException re) {System.err.println(re);System.exit(1);}
 		catch (UnknownHostException re) {System.err.println(re);System.exit(1);}

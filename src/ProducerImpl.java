@@ -115,6 +115,15 @@ public class ProducerImpl
 				"rmi://" + args[2] + ":" + args[3] + "/GameCoordinator");
 			gameCoord.addProducer(hostIP,args[1],port);
 			
+			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+				public void run() {
+					try {
+						Naming.unbind(bindname);
+						gameCoord.removeProducer(hostIP,args[1]);
+					} catch (Exception e) {}
+				}
+			}));
+			
 			System.out.println("Producer running");
 			while (true) {
 				p.produce();
@@ -123,12 +132,14 @@ public class ProducerImpl
 		} 
 		catch (NumberFormatException e) { 
 			System.out.println("Not a resource"); 
-			System.out.println(e) ; 
+			System.out.println(e) ;
+			System.exit(1); 
 		}
 		catch (AlreadyBoundException e) {
 			System.out.println("Is this port already used by another "+
 					"producer on this host machine?"); 
 			System.out.println(e) ;
+			System.exit(1);
 		}
 		catch (RemoteException e) {System.out.println(e);System.exit(1); }
 		catch (MalformedURLException e) {System.out.println(e);System.exit(1); }

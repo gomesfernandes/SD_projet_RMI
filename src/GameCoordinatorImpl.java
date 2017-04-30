@@ -83,6 +83,25 @@ public class GameCoordinatorImpl
 		System.out.println("New average round time: "+getAvgRoundTime());
 	}
 	
+	/** {@inheritDoc} */ 
+	public void removeProducer(String host,String port) 
+												throws RemoteException {
+		Agent a = new Agent(host,port,Agent.PRODUCER);
+		if (producers.containsKey(a)) {
+			producers.remove(a);
+			System.out.println("Removed producer : "+host+","+port);
+		}
+	}
+	/** {@inheritDoc} */ 
+	public void removePlayer(String host,String port) 
+												throws RemoteException {
+		Agent a = new Agent(host,port,Agent.PLAYER);
+		if (competitors.contains(a)) {
+			competitors.remove(a);
+			System.out.println("Removed player : "+host+","+port);
+		}										
+	}
+	
 	/** @return the average time it takes to finish a round */
 	private long getAvgRoundTime() throws RemoteException {
 		if (roundTimes.size() == 0) 

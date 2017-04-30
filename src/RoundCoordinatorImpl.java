@@ -316,7 +316,9 @@ public class RoundCoordinatorImpl
 			System.out.println("The winner is player "+roundCoord.getWinner());
 			roundCoord.stopProduction();
 			gameCoord.addRoundTime(roundCoord.getRoundTime());
-			Naming.unbind(bindname) ;
+			//Naming.unbind(bindname) ;
+			System.out.println("Exiting...");
+			Thread.sleep(600);
 			System.exit(0);
 		} 
 		catch (RemoteException re) { System.err.println(re) ;System.exit(1); }
