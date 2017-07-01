@@ -358,11 +358,11 @@ public class PlayerImpl
 			}
 		}
 		
-		String bindname = "rmi://localhost:" + args[0] + "/Player";
-		
+		final String bindname = "rmi://localhost:" + args[0] + "/Player";
+		final String myport = args[0];
 		try {
 			int port = Integer.parseInt(args[0]);
-			String hostIP = InetAddress.getLocalHost().getHostAddress();
+			final String hostIP = InetAddress.getLocalHost().getHostAddress();
 			
 			/* create local producer object and bind it */
 			PlayerImpl j = new PlayerImpl(hostIP,args[0]);
@@ -370,7 +370,7 @@ public class PlayerImpl
 			j.setPeronalityType(personalityType);
 
 			/* access game coordinator and notify him about us */
-			GameCoordinator gameCoord = (GameCoordinator) Naming.lookup(
+			final GameCoordinator gameCoord = (GameCoordinator) Naming.lookup(
 				"rmi://" + args[1] + ":" + args[2] + "/GameCoordinator");
 			gameCoord.addPlayer(hostIP,args[0]);
 			if (isHuman) gameCoord.hasHumanPlayer();
@@ -379,7 +379,7 @@ public class PlayerImpl
 				public void run() {
 					try {
 						Naming.unbind(bindname);
-						gameCoord.removePlayer(hostIP,args[0]);
+						gameCoord.removePlayer(hostIP,myport);
 					} catch (Exception e) {}
 				}
 			}));

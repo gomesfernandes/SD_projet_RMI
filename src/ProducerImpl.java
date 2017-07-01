@@ -100,26 +100,26 @@ public class ProducerImpl
 			System.exit(0) ;
 		}
 		
-		String bindname = "rmi://localhost:" + args[1] + "/Producer";
-		
+		final String bindname = "rmi://localhost:" + args[1] + "/Producer";
+		final String port = args[1];
 		try {
-			int port = Integer.parseInt(args[0]);
-			String hostIP = InetAddress.getLocalHost().getHostAddress();
+			int resstype = Integer.parseInt(args[0]);
+			final String hostIP = InetAddress.getLocalHost().getHostAddress();
 			
 			/* create local producer object and bind it */
-			ProducerImpl p = new ProducerImpl(port);
+			ProducerImpl p = new ProducerImpl(resstype);
 			Naming.bind(bindname ,p);
 			
 			/* access game coordinator and notify him about us */
-			GameCoordinator gameCoord = (GameCoordinator) Naming.lookup(
+			final GameCoordinator gameCoord = (GameCoordinator) Naming.lookup(
 				"rmi://" + args[2] + ":" + args[3] + "/GameCoordinator");
-			gameCoord.addProducer(hostIP,args[1],port);
+			gameCoord.addProducer(hostIP,args[1],resstype);
 			
 			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 				public void run() {
 					try {
 						Naming.unbind(bindname);
-						gameCoord.removeProducer(hostIP,args[1]);
+						gameCoord.removeProducer(hostIP,port);
 					} catch (Exception e) {}
 				}
 			}));
